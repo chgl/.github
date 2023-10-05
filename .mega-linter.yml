@@ -1,0 +1,15 @@
+# Configuration file for MegaLinter
+# See all available variables at https://megalinter.io/latest/configuration/ and in linters documentation
+IGNORE_GITIGNORED_FILES: true
+
+# all, none, or list of linter keys
+APPLY_FIXES: none
+DISABLE_LINTERS:
+  - SPELL_CSPELL
+  - SPELL_LYCHEE
+
+SHOW_ELAPSED_TIME: true
+FILEIO_REPORTER: false
+
+REPOSITORY_KICS_CONFIG_FILE: .kics.yaml
+SPELL_LYCHEE_CONFIG_FILE: .lychee.toml
