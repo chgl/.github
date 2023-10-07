@@ -198,6 +198,7 @@ jobs:
   megalinter:
     name: MegaLinter
     runs-on: ubuntu-22.04
+    if: ${{ github.event_name == 'pull_request' }}
     permissions:
       issues: write
       pull-requests: write
