@@ -228,6 +228,9 @@ jobs:
   dependency-review:
     name: dependency review
     runs-on: ubuntu-22.04
+    # can only run on PRs or the error is:
+    # "Both a base ref and head ref must be provided, either via the `base_ref`/`head_ref` config options, or by running a `pull_request`/`pull_request_target` workflow."
+    if: ${{ github.event_name == 'pull_request' }}
     permissions:
       contents: read
     steps:
