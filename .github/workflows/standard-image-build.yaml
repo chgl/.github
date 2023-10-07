@@ -202,7 +202,6 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      # Git Checkout
       - name: Checkout Code
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
@@ -225,3 +224,15 @@ jobs:
           path: |
             megalinter-reports
             mega-linter.log
+
+  dependency-review:
+    name: dependency review
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@6c5ccdad469c9f8a2996bfecaec55a631a347034 # v3.1.0
