@@ -1,5 +1,12 @@
-FROM docker.io/library/busybox:1.36.1@sha256:3fbc632167424a6d997e74f52b878d7cc478225cffac6bc977eedfe51c7f4e79
+FROM docker.io/library/python:3.12.0-slim@sha256:fde1011b3a944e4e750982480905b563fd08a0f3fde49b963b05d8ebf6846ce8 AS base
+WORKDIR /app
+COPY hello_world.py .
 
-RUN echo "Hello World"
+FROM base AS test
+RUN echo "Hello test"
+
+FROM base AS runtime
+RUN echo "Hello runtime"
 
 USER 65532:65532
+CMD [ "python", "/app/hello_world.py" ]

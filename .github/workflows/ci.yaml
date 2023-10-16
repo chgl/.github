@@ -20,10 +20,14 @@ jobs:
       pull-requests: write
       actions: read
       issues: write
+      security-events: write
     with:
       # can't use the default "ghcr.io/${{ github.repository }}" since
       # "ghcr.io/chgl/.github:pr-1": invalid reference format"
       image: ghcr.io/chgl/github-reusable-workflow
+      enable-build-test-layer: true
+      enable-codeql: true
+      codeql-languages: '["python"]'
     secrets:
       semantic-release-token: ${{ secrets.GITHUB_TOKEN }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
