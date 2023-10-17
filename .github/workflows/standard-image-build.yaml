@@ -30,6 +30,13 @@ on:
         required: false
         default: '["java", "csharp", "python"]'
         type: string
+    outputs:
+      image-tags:
+        value: ${{ jobs.build.outputs.image-tags }}
+        description: "The built image tags"
+      image-digest:
+        value: ${{ jobs.build.outputs.image-digest }}
+        description: "The built image digest"
     secrets:
       semantic-release-token:
         description: "The PAT used by the semantic release action"
@@ -50,7 +57,6 @@ jobs:
       packages: write
     outputs:
       image-tags: ${{ steps.image_meta.outputs.tags }}
-      image-version: ${{ steps.image_meta.outputs.version }}
       image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
