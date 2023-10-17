@@ -20,6 +20,11 @@ on:
         required: false
         default: false
         type: boolean
+      enable-upload-test-image:
+        description: "If enabled, uploads the image built from the test layer as an artifact."
+        required: false
+        default: false
+        type: boolean
       enable-codeql:
         description: "Enable CodeQL analysis workflows"
         required: false
@@ -105,14 +110,14 @@ jobs:
           target: test
 
       - name: Save test image as tar archive
-        if: ${{ inputs.enable-build-test-layer }}
+        if: ${{ inputs.enable-build-test-layer && inputs.enable-upload-test-image }}
         env:
           IMAGE: ${{ fromJson(steps.tests_image_meta.outputs.json).tags[0] }}
         run: |
           docker save "$IMAGE" -o /tmp/image-test.tar
 
       - name: Upload test image
-        if: ${{ inputs.enable-build-test-layer }}
+        if: ${{ inputs.enable-build-test-layer && inputs.enable-upload-test-image }}
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: test-image

@@ -26,6 +26,7 @@ jobs:
       # "ghcr.io/chgl/.github:pr-1": invalid reference format"
       image: ghcr.io/chgl/github-reusable-workflow
       enable-build-test-layer: true
+      enable-upload-test-image: true
       enable-codeql: true
       codeql-languages: '["python"]'
     secrets:
