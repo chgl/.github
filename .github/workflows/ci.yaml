@@ -31,3 +31,29 @@ jobs:
     secrets:
       semantic-release-token: ${{ secrets.GITHUB_TOKEN }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    runs-on: ubuntu-22.04
+    needs:
+      - standard
+    steps:
+      - name: Download build image
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: container-image
+          path: /tmp
+
+      - name: Download test image
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: test-image
+          path: /tmp
+
+      - name: load image
+        run: |
+          docker load --input /tmp/image.tar
+          docker load --input /tmp/image-test.tar
+
+      - name: load image
+        run: |
+          docker image ls
