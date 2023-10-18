@@ -40,17 +40,20 @@ jobs:
     steps:
       - name: Download build image
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           name: container-image
           path: /tmp
 
       - name: Download test image
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           name: test-image
           path: /tmp
 
       - name: load image
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
           docker load --input /tmp/image.tar
           docker load --input /tmp/image-test.tar
