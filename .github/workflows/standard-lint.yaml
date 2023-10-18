@@ -1,0 +1,121 @@
+name: Standard workflow for linting
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  workflow_call:
+    inputs:
+      enable-codeql:
+        description: "Enable CodeQL analysis workflows"
+        required: false
+        default: false
+        type: boolean
+      codeql-languages:
+        description: "Languages to run CodeQL analysis for. CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]"
+        required: false
+        default: '["java", "csharp", "python"]'
+        type: string
+    secrets:
+      github-token:
+        description: "The GitHub workflow token used to push to ghcr.io. Also used by MegaLinter"
+        required: true
+
+jobs:
+  megalinter:
+    name: MegaLinter
+    runs-on: ubuntu-22.04
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      # MegaLinter
+      - name: MegaLinter
+        id: ml
+        # You can override MegaLinter flavor used to have faster performances
+        # More info at https://megalinter.io/latest/flavors/
+        uses: oxsecurity/megalinter@a87b2872713c6bdde46d2473c5d7ed23e5752dc2 # v7.4.0
+        env:
+          VALIDATE_ALL_CODEBASE: "true"
+          GITHUB_TOKEN: ${{ secrets.github-token }}
+
+      # Upload MegaLinter artifacts
+      - name: Archive production artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: MegaLinter reports
+          path: |
+            megalinter-reports
+            mega-linter.log
+
+  dependency-review:
+    name: dependency review
+    runs-on: ubuntu-22.04
+    # can only run on PRs or the error is:
+    # "Both a base ref and head ref must be provided, either via the `base_ref`/`head_ref` config options, or by running a `pull_request`/`pull_request_target` workflow."
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@6c5ccdad469c9f8a2996bfecaec55a631a347034 # v3.1.0
+
+  codeql-analyze:
+    name: CodeQL analyze
+    runs-on: ubuntu-22.04
+    if: ${{ github.event_name == 'pull_request' && inputs.enable-codeql }}
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJSON(inputs.codeql-languages) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@0116bc2df50751f9724a2e35ef1f24d22f90e4e1 # v2.22.3
+        with:
+          languages: ${{ matrix.language }}
+          # If you wish to specify custom queries, you can do so here or in a config file.
+          # By default, queries listed here will override any specified in a config file.
+          # Prefix the list here with "+" to use these queries and those in the config file.
+
+          # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+          queries: +security-extended,security-and-quality
+
+      # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
+      # If this step fails, then you should remove it and run the build manually (see below)
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@0116bc2df50751f9724a2e35ef1f24d22f90e4e1 # v2.22.3
+
+      # ℹ️ Command-line programs to run using the OS shell.
+      # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
+
+      #   If the Autobuild fails above, remove it and uncomment the following three lines.
+      #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
+
+      # - run: |
+      #   echo "Run, Build Application using script"
+      #   ./location_of_script_within_repo/buildscript.sh
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@0116bc2df50751f9724a2e35ef1f24d22f90e4e1 # v2.22.3
+        with:
+          category: "/language:${{matrix.language}}"
