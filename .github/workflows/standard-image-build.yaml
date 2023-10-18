@@ -39,6 +39,9 @@ on:
       image-tags:
         value: ${{ jobs.build.outputs.image-tags }}
         description: "The built image tags"
+      image-meta-json:
+        value: ${{ jobs.build.outputs.image-meta-json }}
+        description: "The built image meta data in JSON format"
       image-digest:
         value: ${{ jobs.build.outputs.image-digest }}
         description: "The built image digest"
@@ -62,6 +65,7 @@ jobs:
       packages: write
     outputs:
       image-tags: ${{ steps.image_meta.outputs.tags }}
+      image-meta-json: ${{ steps.image_meta.outputs.json }}
       image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
