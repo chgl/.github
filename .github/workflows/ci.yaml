@@ -29,6 +29,24 @@ jobs:
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 
+  build-without-test-image:
+    uses: ./.github/workflows/standard-build.yaml
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+      pull-requests: write
+      actions: read
+      security-events: write
+    with:
+      # can't use the default "ghcr.io/${{ github.repository }}" since
+      # "ghcr.io/chgl/.github:pr-1": invalid reference format"
+      image: ghcr.io/chgl/github-reusable-workflow
+      enable-build-test-layer: false
+      enable-upload-test-image: false
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+
   lint:
     uses: ./.github/workflows/standard-lint.yaml
     permissions:
