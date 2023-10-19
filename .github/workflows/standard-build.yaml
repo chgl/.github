@@ -47,6 +47,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      security-events: write
     outputs:
       image-tags: ${{ steps.image_meta.outputs.tags }}
       image-meta-json: ${{ steps.image_meta.outputs.json }}
@@ -67,7 +68,7 @@ jobs:
 
       - name: Container meta for the test image
         id: tests_image_meta
-        if: ${{ inputs.enable-build-test-layer }}
+        if: ${{ inputs.enable-build-test-layer == true }}
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5
         with:
           images: |
@@ -86,7 +87,7 @@ jobs:
 
       # ran first to avoid pushing failing images when running on master.
       - name: Build unit test image layer
-        if: ${{ inputs.enable-build-test-layer }}
+        if: ${{ inputs.enable-build-test-layer == true }}
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5
         with:
           push: false
@@ -98,14 +99,14 @@ jobs:
           target: test
 
       - name: Save test image as tar archive
-        if: ${{ inputs.enable-build-test-layer && inputs.enable-upload-test-image }}
+        if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
         env:
           IMAGE: ${{ fromJson(steps.tests_image_meta.outputs.json).tags[0] }}
         run: |
           docker save "$IMAGE" -o /tmp/image-test.tar
 
       - name: Upload test image
-        if: ${{ inputs.enable-build-test-layer && inputs.enable-upload-test-image }}
+        if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: test-image
@@ -147,7 +148,30 @@ jobs:
           exit-code: "0"
           format: cosign-vuln
           output: trivy-vuln-attestation.json
-          timeout: 15m
+
+      - name: Run Trivy vulnerability scanner for GitHub Security tab
+        uses: aquasecurity/trivy-action@fbd16365eb88e12433951383f5e99bd901fc618f # 0.12.0
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
+          exit-code: "0"
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@517782a2a0dd93543ea4f12f41006cf70ddca135 # v2.22.3
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          sarif_file: "trivy-results.sarif"
+
+      - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
+        uses: aquasecurity/trivy-action@fbd16365eb88e12433951383f5e99bd901fc618f # 0.12.0
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
+          format: "github"
+          output: "dependency-results.sbom.json"
+          github-pat: ${{ secrets.github-token }}
 
       - name: Upload image vulnerability attestation
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3

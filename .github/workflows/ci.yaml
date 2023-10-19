@@ -19,6 +19,7 @@ jobs:
       packages: write
       pull-requests: write
       actions: read
+      security-events: write
     with:
       # can't use the default "ghcr.io/${{ github.repository }}" since
       # "ghcr.io/chgl/.github:pr-1": invalid reference format"
