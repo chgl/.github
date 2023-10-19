@@ -101,7 +101,7 @@ jobs:
       - name: Save test image as tar archive
         if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
         env:
-          IMAGE: ${{ fromJson(steps.tests_image_meta.outputs.json).tags[0] }}
+          IMAGE: ${{ steps.tests_image_meta.outputs.json && fromJson(steps.tests_image_meta.outputs.json).tags[0] }}
         run: |
           docker save "$IMAGE" -o /tmp/image-test.tar
 
