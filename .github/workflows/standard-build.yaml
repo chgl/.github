@@ -142,7 +142,7 @@ jobs:
             /tmp/image.tar
 
       - name: Save Trivy vulnerability attestation
-        uses: aquasecurity/trivy-action@f78e9ecf42a1271402d4f484518b9313235990e1 # 0.13.1
+        uses: aquasecurity/trivy-action@2b6a709cf9c4025c5438138008beaddbb02086f0 # 0.14.0
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
           exit-code: "0"
@@ -150,7 +150,7 @@ jobs:
           output: trivy-vuln-attestation.json
 
       - name: Run Trivy vulnerability scanner for GitHub Security tab
-        uses: aquasecurity/trivy-action@f78e9ecf42a1271402d4f484518b9313235990e1 # 0.13.1
+        uses: aquasecurity/trivy-action@2b6a709cf9c4025c5438138008beaddbb02086f0 # 0.14.0
         if: ${{ github.event_name != 'pull_request' }}
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
@@ -165,7 +165,7 @@ jobs:
           sarif_file: "trivy-results.sarif"
 
       - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
-        uses: aquasecurity/trivy-action@f78e9ecf42a1271402d4f484518b9313235990e1 # 0.13.1
+        uses: aquasecurity/trivy-action@2b6a709cf9c4025c5438138008beaddbb02086f0 # 0.14.0
         if: ${{ github.event_name != 'pull_request' }}
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
@@ -221,7 +221,7 @@ jobs:
           path: /tmp
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@11086d25041f77fe8fe7b9ea4e48e3b9192b8f19 # v3.1.2
+        uses: sigstore/cosign-installer@1fc5bd396d372bee37d608f955b336615edf79c8 # v3.2.0
 
       # via <https://github.com/actions/starter-workflows/blob/main/ci/docker-publish.yml>
       - name: Sign image
