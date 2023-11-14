@@ -20,6 +20,11 @@ on:
         required: false
         default: '["java", "csharp", "python"]'
         type: string
+      dotnet-version:
+        description: "The .NET version to use by the CodeQL action"
+        required: false
+        default: "8.0.x"
+        type: string
     secrets:
       github-token:
         description: "The GitHub workflow token used to push to ghcr.io. Also used by MegaLinter"
@@ -87,6 +92,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Java
+        if: ${{ matrix.language == 'csharp' }}
+        uses: actions/setup-dotnet@3447fd6a9f9e57506b15f895c5b76d3b197dc7c2 # v3.2.0
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
