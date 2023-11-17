@@ -56,7 +56,7 @@ jobs:
       security-events: write
       actions: read
     with:
-      codeql-languages: '["python", "csharp"]'
+      codeql-languages: '["python"]'
       enable-codeql: true
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
