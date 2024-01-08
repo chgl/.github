@@ -142,7 +142,7 @@ jobs:
             /tmp/image.tar
 
       - name: Save Trivy vulnerability attestation
-        uses: aquasecurity/trivy-action@91713af97dc80187565512baba96e4364e983601 # 0.16.0
+        uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca # 0.16.1
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
           exit-code: "0"
@@ -150,7 +150,7 @@ jobs:
           output: trivy-vuln-attestation.json
 
       - name: Run Trivy vulnerability scanner for GitHub Security tab
-        uses: aquasecurity/trivy-action@91713af97dc80187565512baba96e4364e983601 # 0.16.0
+        uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca # 0.16.1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
@@ -165,7 +165,7 @@ jobs:
           sarif_file: "trivy-results.sarif"
 
       - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
-        uses: aquasecurity/trivy-action@91713af97dc80187565512baba96e4364e983601 # 0.16.0
+        uses: aquasecurity/trivy-action@d43c1f16c00cfd3978dde6c07f4bbcf9eb6993ca # 0.16.1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
