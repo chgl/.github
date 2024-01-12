@@ -41,7 +41,7 @@ jobs:
     with:
       # can't use the default "ghcr.io/${{ github.repository }}" since
       # "ghcr.io/chgl/.github:pr-1": invalid reference format"
-      image: ghcr.io/chgl/github-reusable-workflow
+      image: ghcr.io/chgl/github-reusable-workflow-without-test-image
       enable-build-test-layer: false
       enable-upload-test-image: false
     secrets:
@@ -67,17 +67,17 @@ jobs:
       - build
     steps:
       - name: Download build image
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
         if: ${{ github.event_name == 'pull_request' }}
         with:
-          name: container-image
+          name: ${{ needs.build.outputs.image-slug }}
           path: /tmp
 
       - name: Download test image
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
         if: ${{ github.event_name == 'pull_request' }}
         with:
-          name: test-image
+          name: ${{ needs.build.outputs.image-slug }}-test
           path: /tmp
 
       - name: load image

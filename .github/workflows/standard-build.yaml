@@ -35,6 +35,9 @@ on:
       image-digest:
         value: ${{ jobs.build.outputs.image-digest }}
         description: "The built image digest"
+      image-slug:
+        value: ${{ jobs.build.outputs.image-slug }}
+        description: "The name of the build image in slugified form. This is the name of the artifact where the image was uploaded to."
     secrets:
       github-token:
         description: "The GitHub workflow token used to push to ghcr.io. Also used by MegaLinter"
@@ -52,6 +55,7 @@ jobs:
       image-tags: ${{ steps.image_meta.outputs.tags }}
       image-meta-json: ${{ steps.image_meta.outputs.json }}
       image-digest: ${{ steps.build.outputs.digest }}
+      image-slug: ${{ steps.slugify-image.outputs.slug }}
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -105,11 +109,19 @@ jobs:
         run: |
           docker save "$IMAGE" -o /tmp/image-test.tar
 
+      - uses: rlespinasse/slugify-value@a4879db1eb3db9bbee01dca36f98a8236c2b8239 # v1.4.0
+        id: slugify-image
+        with:
+          key: BUILD_IMAGE
+          value: ${{ steps.image_meta.outputs.json && fromJson(steps.image_meta.outputs.json).tags[0] }}
+          publish-env: false
+          slug-maxlength: nolimit
+
       - name: Upload test image
         if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@1eb3cb2b3e0f29609092a73eb033bb759a334595 # v4.1.0
         with:
-          name: test-image
+          name: ${{ steps.slugify-image.outputs.slug }}-test
           path: |
             /tmp/image-test.tar
 
@@ -135,9 +147,9 @@ jobs:
 
       - name: Upload container image
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@1eb3cb2b3e0f29609092a73eb033bb759a334595 # v4.1.0
         with:
-          name: container-image
+          name: ${{ steps.slugify-image.outputs.slug }}
           path: |
             /tmp/image.tar
 
@@ -174,9 +186,9 @@ jobs:
           github-pat: ${{ secrets.github-token }}
 
       - name: Upload image vulnerability attestation
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@1eb3cb2b3e0f29609092a73eb033bb759a334595 # v4.1.0
         with:
-          name: image-trivy-vuln-attestation
+          name: ${{ steps.slugify-image.outputs.slug }}-trivy-attestation
           path: |
             trivy-vuln-attestation.json
 
@@ -215,9 +227,9 @@ jobs:
           password: ${{ secrets.github-token }}
 
       - name: Download attestations
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
         with:
-          name: image-trivy-vuln-attestation
+          name: ${{ needs.build.outputs.image-slug }}-trivy-attestation
           path: /tmp
 
       - name: Install Cosign
