@@ -200,7 +200,7 @@ jobs:
       actions: read # for detecting the Github Actions environment.
       id-token: write
       packages: write # for uploading attestations.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
       image: ${{ inputs.image }}
       digest: ${{ needs.build.outputs.image-digest }}
