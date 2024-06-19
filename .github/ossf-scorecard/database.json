@@ -1,28 +1,12 @@
 {
   "github.com": {
     "chgl": {
-      "charts": {
-        "previous": [],
-        "current": {
-          "score": 6.8,
-          "date": "2024-06-17T19:38:20Z",
-          "commit": "1599c6df679c81ab59afab46a81f57b1538de795"
-        }
-      },
       "kube-powertools": {
         "previous": [],
         "current": {
           "score": 7.4,
           "date": "2024-06-17T15:51:20Z",
           "commit": "d1be04232ee738bb59d1f773517d4ac9596112e7"
-        }
-      },
-      "fhir-server-exporter": {
-        "previous": [],
-        "current": {
-          "score": 8.1,
-          "date": "2024-06-17T19:45:27Z",
-          "commit": "262509cc755b61ad9faaeb7b69b127a704731fa8"
         }
       },
       "magniFHIR": {
@@ -33,12 +17,28 @@
           "commit": "5fcae4119af774b575ce57c0322594aff038c20a"
         }
       },
+      "fhir-server-exporter": {
+        "previous": [],
+        "current": {
+          "score": 8.1,
+          "date": "2024-06-17T19:45:27Z",
+          "commit": "262509cc755b61ad9faaeb7b69b127a704731fa8"
+        }
+      },
       "recruit-release-test": {
         "previous": [],
         "current": {
           "score": 5.9,
           "date": "2023-01-14",
           "commit": "f4ff570a40e580daf6a86c3b9096af0ae247d6c4"
+        }
+      },
+      "charts": {
+        "previous": [],
+        "current": {
+          "score": 6.8,
+          "date": "2024-06-17T19:38:20Z",
+          "commit": "1599c6df679c81ab59afab46a81f57b1538de795"
         }
       },
       "slsa3-test": {
