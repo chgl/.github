@@ -26,8 +26,8 @@ jobs:
         id: openssf-scorecard-monitor
         with:
           scope: .github/ossf-scorecard/scope.json
-          database: tools/ossf-scorecard/database.json
-          report: tools/ossf-scorecard/report.md
+          database: .github/ossf-scorecard/database.json
+          report: .github/ossf-scorecard/report.md
           auto-commit: false
           auto-push: false
           generate-issue: true
