@@ -18,12 +18,20 @@ jobs:
   release:
     name: release
     runs-on: ubuntu-22.04
+    # run only on pushes. The semantic release default config allows releases
+    # to only be created from the default branch ('master'). The ci.yaml
+    # is configured to only run on pushes to master as well.
+    if: ${{ github.event_name  == 'push' }}
     permissions:
       contents: write
       pull-requests: write
       issues: write
-    if: ${{ github.event_name != 'pull_request' }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit # change to 'egress-policy: block' after couple of runs
+
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
@@ -43,4 +51,4 @@ jobs:
             semantic-release-replace-plugin@1.2.0
             @semantic-release/git@10.0.1
         env:
-          GITHUB_TOKEN: ${{ secrets.semantic-release-token }}
+          GITHUB_TOKEN: ${{ secrets.semantic-release-token || secrets.GITHUB_TOKEN }}

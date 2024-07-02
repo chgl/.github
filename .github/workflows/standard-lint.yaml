@@ -11,14 +11,39 @@ on:
   workflow_call:
     inputs:
       enable-codeql:
-        description: "Enable CodeQL analysis workflows"
+        description: "Enable CodeQL analysis"
         required: false
-        default: false
+        default: true
         type: boolean
       codeql-languages:
         description: "Languages to run CodeQL analysis for. CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]"
         required: false
         default: '["java", "csharp", "python"]'
+        type: string
+      enable-validate-gradle-wrapper:
+        description: "Enable Gradle wrapper validation"
+        required: false
+        default: true
+        type: boolean
+      enable-verify-base-image-signature:
+        description: "Enable Dockerfile base image validation"
+        required: false
+        default: true
+        type: boolean
+      verify-base-image-certificate-oidc-issuer:
+        description: "The OIDC issuer for the cosign base image signature"
+        required: false
+        default: "https://accounts.google.com"
+        type: string
+      verify-base-image-certificate-identity:
+        description: "The certificate identity for the cosign base image signature"
+        required: false
+        default: "keyless@distroless.iam.gserviceaccount.com"
+        type: string
+      java-version:
+        description: "The Java version to use by the CodeQL action"
+        required: false
+        default: "17"
         type: string
       dotnet-version:
         description: "The .NET version to use by the CodeQL action"
@@ -39,6 +64,11 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit # change to 'egress-policy: block' after couple of runs
+
       - name: Checkout Code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
@@ -73,14 +103,46 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
       - name: Dependency Review
         uses: actions/dependency-review-action@72eb03d02c7872a771aacd928f3123ac62ad6d3a # v4.3.3
+
+  gradle-wrapper-validation:
+    name: validate gradle wrapper
+    runs-on: ubuntu-22.04
+    if: ${{ inputs.enable-validate-gradle-wrapper }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@dbbdc275be76ac10734476cc723d82dfe7ec6eda # v3.4.2
+
+  base-image-signature-verification:
+    name: verify Dockerfile base image signature
+    runs-on: ubuntu-22.04
+    if: ${{ inputs.enable-verify-base-image-signature }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 1
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0
+      - run: |
+          cosign dockerfile verify \
+            --output text \
+            --base-image-only \
+            --certificate-oidc-issuer ${{ inputs.verify-base-image-certificate-oidc-issuer }} \
+            --certificate-identity ${{ inputs.verify-base-image-certificate-identity }} \
+            Dockerfile
 
   codeql-analyze:
     name: CodeQL analyze
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'pull_request' && inputs.enable-codeql }}
+    if: ${{ inputs.enable-codeql }}
     permissions:
       actions: read
       contents: read
@@ -93,6 +155,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
+      - name: Set up Java
+        if: ${{ matrix.language == 'java' }}
+        uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: "temurin"
+          cache: gradle
+
       - name: Set up .NET
         if: ${{ matrix.language == 'csharp' }}
         uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3 # v4.0.0
@@ -101,7 +171,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
+        uses: github/codeql-action/init@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -114,7 +184,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
+        uses: github/codeql-action/autobuild@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -127,6 +197,6 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
+        uses: github/codeql-action/analyze@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
         with:
           category: "/language:${{matrix.language}}"

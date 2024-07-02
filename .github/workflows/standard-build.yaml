@@ -15,6 +15,16 @@ on:
         required: false
         default: "ghcr.io/${{ github.repository }}"
         type: string
+      build-context:
+        description: "The directory containing the Containerfile used to build the image"
+        required: false
+        default: "."
+        type: string
+      enable-upload-image:
+        description: "If enabled, upload the image as a build artifact"
+        required: false
+        default: true
+        type: boolean
       enable-build-test-layer:
         description: "If enabled, builds a layer called `test` inside the Dockerfile. Useful for unit testing."
         required: false
@@ -25,16 +35,46 @@ on:
         required: false
         default: false
         type: boolean
+      enable-trivy-scan:
+        description: "If enabled, scan the image using trivy and publish a signed attestation"
+        required: false
+        default: true
+        type: boolean
+      trivy-ignore-unfixed:
+        description: "Ignore unfixed/unfixable vulnerabilities in reports"
+        required: false
+        default: true
+        type: boolean
+      image-tags:
+        description: "If set, overwrite the default image tags. See <https://github.com/docker/metadata-action?tab=readme-ov-file#tags-input> for the format and usage."
+        required: false
+        default: ""
+        type: string
     outputs:
       image-tags:
         value: ${{ jobs.build.outputs.image-tags }}
         description: "The built image tags"
+      image-version:
+        value: ${{ jobs.build.outputs.image-version }}
+        description: "The built image version"
       image-meta-json:
         value: ${{ jobs.build.outputs.image-meta-json }}
         description: "The built image meta data in JSON format"
       image-digest:
         value: ${{ jobs.build.outputs.image-digest }}
         description: "The built image digest"
+      test-image-tags:
+        value: ${{ jobs.build.outputs.test-image-tags }}
+        description: "The test image tags"
+      test-image-meta-json:
+        value: ${{ jobs.build.outputs.test-image-meta-json }}
+        description: "The test image meta data in JSON format"
+      test-image-digest:
+        value: ${{ jobs.build.outputs.test-image-digest }}
+        description: "The test image digest"
+      test-image-version:
+        value: ${{ jobs.build.outputs.test-image-version }}
+        description: "The built image version"
       image-slug:
         value: ${{ jobs.build.outputs.image-slug }}
         description: "The name of the build image in slugified form. This is the name of the artifact where the image was uploaded to."
@@ -50,18 +90,28 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # for uploading trivy scan results to security tab
       security-events: write
+      # for the trivy PR comment
+      pull-requests: write
     outputs:
+      image-version: ${{ steps.image_meta.outputs.version }}
       image-tags: ${{ steps.image_meta.outputs.tags }}
       image-meta-json: ${{ steps.image_meta.outputs.json }}
       image-digest: ${{ steps.build.outputs.digest }}
+      test-image-version: ${{ steps.tests_image_meta.outputs.version }}
+      test-image-tags: ${{ steps.tests_image_meta.outputs.tags }}
+      test-image-meta-json: ${{ steps.tests_image_meta.outputs.json }}
+      test-image-digest: ${{ steps.build_test.outputs.digest }}
       image-slug: ${{ steps.slugify-image.outputs.slug }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit # change to 'egress-policy: block' after couple of runs
+
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          # via <https://stackoverflow.com/questions/74744498/github-pushing-to-protected-branches-with-fine-grained-token/76550826#76550826>
-          persist-credentials: false
 
       - name: Container image meta
         id: image_meta
@@ -69,6 +119,8 @@ jobs:
         with:
           images: |
             ${{ inputs.image }}
+          tags: |
+            ${{ inputs.image-tags }}
 
       - name: Container meta for the test image
         id: tests_image_meta
@@ -92,8 +144,10 @@ jobs:
       # ran first to avoid pushing failing images when running on master.
       - name: Build unit test image layer
         if: ${{ inputs.enable-build-test-layer == true }}
-        uses: docker/build-push-action@15560696de535e4014efeff63c48f16952e52dd1 # v6
+        id: build_test
+        uses: docker/build-push-action@31159d49c0d4756269a0940a750801a1ea5d7003 # v6
         with:
+          context: ${{ inputs.build-context }}
           push: false
           load: true
           tags: ${{ steps.tests_image_meta.outputs.tags }}
@@ -102,13 +156,6 @@ jobs:
           cache-to: type=gha,mode=max
           target: test
 
-      - name: Save test image as tar archive
-        if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
-        env:
-          IMAGE: ${{ steps.tests_image_meta.outputs.json && fromJson(steps.tests_image_meta.outputs.json).tags[0] }}
-        run: |
-          docker save "$IMAGE" -o /tmp/image-test.tar
-
       - uses: rlespinasse/slugify-value@a4879db1eb3db9bbee01dca36f98a8236c2b8239 # v1.4.0
         id: slugify-image
         with:
@@ -116,6 +163,13 @@ jobs:
           value: ${{ steps.image_meta.outputs.json && fromJson(steps.image_meta.outputs.json).tags[0] }}
           publish-env: false
           slug-maxlength: nolimit
+
+      - name: Save test image as tar archive
+        if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
+        env:
+          IMAGE: ${{ steps.tests_image_meta.outputs.json && fromJson(steps.tests_image_meta.outputs.json).tags[0] }}
+        run: |
+          docker save "$IMAGE" -o /tmp/image-test.tar
 
       - name: Upload test image
         if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
@@ -127,8 +181,9 @@ jobs:
 
       - name: Build and push image
         id: build
-        uses: docker/build-push-action@15560696de535e4014efeff63c48f16952e52dd1 # v6
+        uses: docker/build-push-action@31159d49c0d4756269a0940a750801a1ea5d7003 # v6
         with:
+          context: ${{ inputs.build-context }}
           # when in a PR, load the image into the local docker daemon
           # this way, we can save it as an artifact in later steps
           load: ${{ github.event_name == 'pull_request' }}
@@ -139,58 +194,92 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Save container image as tar archive
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && inputs.enable-upload-image == true }}
         env:
           IMAGE: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
         run: |
           docker save "$IMAGE" -o /tmp/image.tar
 
       - name: Upload container image
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && inputs.enable-upload-image == true }}
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: ${{ steps.slugify-image.outputs.slug }}
           path: |
             /tmp/image.tar
 
+      - name: Print docker usage
+        run: |
+          ls -lsa /tmp
+          docker system df
+
       - name: Save Trivy vulnerability attestation
         uses: aquasecurity/trivy-action@7c2007bcb556501da015201bcba5aa14069b74e2 # 0.23.0
+        if: ${{ inputs.enable-trivy-scan }}
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
           exit-code: "0"
           format: cosign-vuln
           output: trivy-vuln-attestation.json
+          ignore-unfixed: ${{ inputs.trivy-ignore-unfixed }}
+
+      - name: Upload image vulnerability attestation
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        if: ${{ inputs.enable-trivy-scan }}
+        with:
+          name: ${{ steps.slugify-image.outputs.slug }}-trivy-attestation
+          path: |
+            trivy-vuln-attestation.json
 
       - name: Run Trivy vulnerability scanner for GitHub Security tab
         uses: aquasecurity/trivy-action@7c2007bcb556501da015201bcba5aa14069b74e2 # 0.23.0
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' && inputs.enable-trivy-scan }}
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
           exit-code: "0"
           format: "sarif"
           output: "trivy-results.sarif"
+          ignore-unfixed: ${{ inputs.trivy-ignore-unfixed }}
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
-        if: ${{ github.event_name != 'pull_request' }}
+        uses: github/codeql-action/upload-sarif@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
+        if: ${{ github.event_name != 'pull_request' && inputs.enable-trivy-scan }}
         with:
           sarif_file: "trivy-results.sarif"
 
-      - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
+      - name: Download PR comment template
+        if: ${{ inputs.enable-trivy-scan }}
+        run: |
+          curl -o trivy-pr-report.md.tpl https://raw.githubusercontent.com/miracum/.github/master/.github/trivy-pr-report.md.tpl
+
+      - name: Run Trivy vulnerability scanner for PR comment
         uses: aquasecurity/trivy-action@7c2007bcb556501da015201bcba5aa14069b74e2 # 0.23.0
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan }}
         with:
           image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
-          format: "github"
-          output: "dependency-results.sbom.json"
-          github-pat: ${{ secrets.github-token }}
+          exit-code: "0"
+          format: "template"
+          template: "@trivy-pr-report.md.tpl"
+          output: "trivy-pr-report.md"
+          ignore-unfixed: ${{ inputs.trivy-ignore-unfixed }}
 
-      - name: Upload image vulnerability attestation
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+      - name: Add trivy report PR comment
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan }}
         with:
-          name: ${{ steps.slugify-image.outputs.slug }}-trivy-attestation
-          path: |
-            trivy-vuln-attestation.json
+          recreate: true
+          header: "trivy-report-comment-${{ steps.slugify-image.outputs.slug }}"
+          path: trivy-pr-report.md
+
+    # requires content: write access
+    #   - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
+    #     uses: aquasecurity/trivy-action@fbd16365eb88e12433951383f5e99bd901fc618f # 0.12.0
+    #     if: ${{ github.event_name != 'pull_request' }}
+    #     with:
+    #       image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
+    #       format: "github"
+    #       output: "dependency-results.sbom.json"
+    #       github-pat: ${{ secrets.github-token }}
 
   image-provenance:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
@@ -219,6 +308,44 @@ jobs:
       id-token: write
       packages: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit # change to 'egress-policy: block' after couple of runs
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.github-token }}
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0
+
+      - name: Sign image
+        env:
+          IMAGE: "${{ inputs.image }}@${{ needs.build.outputs.image-digest }}"
+        run: |
+          echo "Signing '$IMAGE' using keyless approach"
+          cosign sign --yes "${IMAGE}"
+
+  attest-trivy-vulnerability-report:
+    name: attest trivy vulnerability report
+    runs-on: ubuntu-22.04
+    if: ${{ github.event_name != 'pull_request' && inputs.enable-trivy-scan }}
+    needs:
+      - build
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
+        with:
+          egress-policy: audit # change to 'egress-policy: block' after couple of runs
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
         with:
@@ -234,15 +361,6 @@ jobs:
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # v3.5.0
-
-      # via <https://github.com/actions/starter-workflows/blob/main/ci/docker-publish.yml>
-      - name: Sign image
-        env:
-          # <https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable>
-          TAGS: ${{ needs.build.outputs.image-tags }}
-          DIGEST: ${{ needs.build.outputs.image-digest }}
-        run: |
-          echo "${TAGS}" | xargs -I {} cosign sign --yes {}@"${DIGEST}"
 
       - name: Attest image vulnerability report
         env:
