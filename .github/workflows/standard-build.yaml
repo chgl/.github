@@ -145,7 +145,7 @@ jobs:
       - name: Build unit test image layer
         if: ${{ inputs.enable-build-test-layer == true }}
         id: build_test
-        uses: docker/build-push-action@31159d49c0d4756269a0940a750801a1ea5d7003 # v6
+        uses: docker/build-push-action@1a162644f9a7e87d8f4b053101d1d9a712edc18c # v6
         with:
           context: ${{ inputs.build-context }}
           push: false
@@ -181,7 +181,7 @@ jobs:
 
       - name: Build and push image
         id: build
-        uses: docker/build-push-action@31159d49c0d4756269a0940a750801a1ea5d7003 # v6
+        uses: docker/build-push-action@1a162644f9a7e87d8f4b053101d1d9a712edc18c # v6
         with:
           context: ${{ inputs.build-context }}
           # when in a PR, load the image into the local docker daemon
