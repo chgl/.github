@@ -173,7 +173,7 @@ jobs:
 
       - name: Upload test image
         if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: ${{ steps.slugify-image.outputs.slug }}-test
           path: |
@@ -202,7 +202,7 @@ jobs:
 
       - name: Upload container image
         if: ${{ github.event_name == 'pull_request' && inputs.enable-upload-image == true }}
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: ${{ steps.slugify-image.outputs.slug }}
           path: |
@@ -224,7 +224,7 @@ jobs:
           ignore-unfixed: ${{ inputs.trivy-ignore-unfixed }}
 
       - name: Upload image vulnerability attestation
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         if: ${{ inputs.enable-trivy-scan }}
         with:
           name: ${{ steps.slugify-image.outputs.slug }}-trivy-attestation
@@ -242,7 +242,7 @@ jobs:
           ignore-unfixed: ${{ inputs.trivy-ignore-unfixed }}
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
+        uses: github/codeql-action/upload-sarif@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
         if: ${{ github.event_name != 'pull_request' && inputs.enable-trivy-scan }}
         with:
           sarif_file: "trivy-results.sarif"
@@ -354,7 +354,7 @@ jobs:
           password: ${{ secrets.github-token }}
 
       - name: Download attestations
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: ${{ needs.build.outputs.image-slug }}-trivy-attestation
           path: /tmp
