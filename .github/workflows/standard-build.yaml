@@ -50,6 +50,12 @@ on:
         required: false
         default: ""
         type: string
+      platforms:
+        description: "List of target platforms for build"
+        required: false
+        type: string
+        default: |
+          linux/amd64
     outputs:
       image-tags:
         value: ${{ jobs.build.outputs.image-tags }}
@@ -113,6 +119,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
+      # <https://docs.docker.com/storage/containerd/>
+      # via <https://github.com/docker/setup-buildx-action/issues/257>
+      - name: Set up containerd image store
+        shell: bash
+        run: |
+          jq '. | .+{"features": {"containerd-snapshotter": true}}' /etc/docker/daemon.json > /tmp/docker-daemon-with-containerd.json
+          sudo mv /tmp/docker-daemon-with-containerd.json /etc/docker/daemon.json
+          cat /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+          docker info -f '{{ .DriverStatus }}'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4fd812986e6c8c2a69e18311145f9371337f27d4 # v3.4.0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@5927c834f5b4fdf503fca6f4c7eccda82949e1ee # v3.1.0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3.2.0
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.github-token }}
+
       - name: Container image meta
         id: image_meta
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5
@@ -125,36 +157,27 @@ jobs:
       - name: Container meta for the test image
         id: tests_image_meta
         if: ${{ inputs.enable-build-test-layer == true }}
-        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
         with:
           images: |
             ${{ inputs.image }}-test
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4fd812986e6c8c2a69e18311145f9371337f27d4 # v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3
-        if: ${{ github.event_name != 'pull_request' }}
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.github-token }}
 
       # ran first to avoid pushing failing images when running on master.
       - name: Build unit test image layer
         if: ${{ inputs.enable-build-test-layer == true }}
         id: build_test
-        uses: docker/build-push-action@1a162644f9a7e87d8f4b053101d1d9a712edc18c # v6
+        uses: docker/build-push-action@1a162644f9a7e87d8f4b053101d1d9a712edc18c # v6.3.0
         with:
           context: ${{ inputs.build-context }}
           push: false
           load: true
+          outputs: type=oci,dest=./image-test.tar
           tags: ${{ steps.tests_image_meta.outputs.tags }}
           labels: ${{ steps.tests_image_meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           target: test
+          platforms: ${{ inputs.platforms }}
 
       - uses: rlespinasse/slugify-value@a4879db1eb3db9bbee01dca36f98a8236c2b8239 # v1.4.0
         id: slugify-image
@@ -164,41 +187,33 @@ jobs:
           publish-env: false
           slug-maxlength: nolimit
 
-      - name: Save test image as tar archive
-        if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
-        env:
-          IMAGE: ${{ steps.tests_image_meta.outputs.json && fromJson(steps.tests_image_meta.outputs.json).tags[0] }}
-        run: |
-          docker save "$IMAGE" -o /tmp/image-test.tar
-
       - name: Upload test image
         if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
         uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: ${{ steps.slugify-image.outputs.slug }}-test
           path: |
-            /tmp/image-test.tar
+            ${{ github.workspace }}/image-test.tar
 
       - name: Build and push image
         id: build
-        uses: docker/build-push-action@1a162644f9a7e87d8f4b053101d1d9a712edc18c # v6
+        uses: docker/build-push-action@1a162644f9a7e87d8f4b053101d1d9a712edc18c # v6.3.0
         with:
           context: ${{ inputs.build-context }}
-          # when in a PR, load the image into the local docker daemon
+          # when in a PR, save the image as a tar archive
           # this way, we can save it as an artifact in later steps
+          # otherwise (on branch-push or releases), push the image to
+          # the registry
           load: ${{ github.event_name == 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
+          outputs: type=oci,dest=./image.tar
+          sbom: ${{ github.event_name != 'pull_request' }}
+          provenance: ${{ github.event_name != 'pull_request' && 'mode=max' || false }}
           tags: ${{ steps.image_meta.outputs.tags }}
           labels: ${{ steps.image_meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Save container image as tar archive
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-upload-image == true }}
-        env:
-          IMAGE: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
-        run: |
-          docker save "$IMAGE" -o /tmp/image.tar
+          platforms: ${{ inputs.platforms }}
 
       - name: Upload container image
         if: ${{ github.event_name == 'pull_request' && inputs.enable-upload-image == true }}
@@ -206,22 +221,27 @@ jobs:
         with:
           name: ${{ steps.slugify-image.outputs.slug }}
           path: |
-            /tmp/image.tar
+            ${{ github.workspace }}/image.tar
 
-      - name: Print docker usage
+      - name: display images
         run: |
-          ls -lsa /tmp
-          docker system df
+          ls -lsa ${{ github.workspace }}
+          docker image ls -a
 
-      - name: Save Trivy vulnerability attestation
-        uses: aquasecurity/trivy-action@7c2007bcb556501da015201bcba5aa14069b74e2 # 0.23.0
+      - name: install trivy
+        run: |
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.53.0/trivy_0.53.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.53.0_Linux-64bit.deb
+
+      - name: Create Trivy vulnerability attestation
         if: ${{ inputs.enable-trivy-scan }}
-        with:
-          image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
-          exit-code: "0"
-          format: cosign-vuln
-          output: trivy-vuln-attestation.json
-          ignore-unfixed: ${{ inputs.trivy-ignore-unfixed }}
+        run: |
+          trivy image \
+            --exit-code=0 \
+            --format=cosign-vuln \
+            --output=trivy-vuln-attestation.json \
+            --ignore-unfixed="${{ inputs.trivy-ignore-unfixed }}" \
+            "${{ fromJson(steps.image_meta.outputs.json).tags[0] }}"
 
       - name: Upload image vulnerability attestation
         uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
@@ -231,41 +251,26 @@ jobs:
           path: |
             trivy-vuln-attestation.json
 
-      - name: Run Trivy vulnerability scanner for GitHub Security tab
-        uses: aquasecurity/trivy-action@7c2007bcb556501da015201bcba5aa14069b74e2 # 0.23.0
-        if: ${{ github.event_name != 'pull_request' && inputs.enable-trivy-scan }}
-        with:
-          image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
-          exit-code: "0"
-          format: "sarif"
-          output: "trivy-results.sarif"
-          ignore-unfixed: ${{ inputs.trivy-ignore-unfixed }}
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
-        if: ${{ github.event_name != 'pull_request' && inputs.enable-trivy-scan }}
-        with:
-          sarif_file: "trivy-results.sarif"
-
       - name: Download PR comment template
         if: ${{ inputs.enable-trivy-scan }}
         run: |
           curl -o trivy-pr-report.md.tpl https://raw.githubusercontent.com/miracum/.github/master/.github/trivy-pr-report.md.tpl
 
       - name: Run Trivy vulnerability scanner for PR comment
-        uses: aquasecurity/trivy-action@7c2007bcb556501da015201bcba5aa14069b74e2 # 0.23.0
         if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan }}
-        with:
-          image-ref: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
-          exit-code: "0"
-          format: "template"
-          template: "@trivy-pr-report.md.tpl"
-          output: "trivy-pr-report.md"
-          ignore-unfixed: ${{ inputs.trivy-ignore-unfixed }}
+        run: |
+          trivy image \
+            --exit-code=0 \
+            --format=template \
+            --output=trivy-pr-report.md \
+            --template="@trivy-pr-report.md.tpl" \
+            --ignore-unfixed="${{ inputs.trivy-ignore-unfixed }}" \
+            "${{ fromJson(steps.image_meta.outputs.json).tags[0] }}"
 
       - name: Add trivy report PR comment
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan }}
+        # when running from a fork, the CI token doesn't have enough permissions to create PR comments
+        if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan && !github.event.pull_request.head.repo.fork }}
         with:
           recreate: true
           header: "trivy-report-comment-${{ steps.slugify-image.outputs.slug }}"

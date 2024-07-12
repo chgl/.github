@@ -68,7 +68,6 @@ jobs:
         uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6 # v2.8.1
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
-
       - name: Checkout Code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
@@ -77,9 +76,11 @@ jobs:
         id: ml
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/latest/flavors/
-        uses: oxsecurity/megalinter@bacb5f8674e3730b904ca4d20c8bd477bc51b1a7 # v7.13.0
+        uses: oxsecurity/megalinter@5199c6377b4cb7faff749a1971636f3343db9fe6 # v7.12.0
         env:
           VALIDATE_ALL_CODEBASE: "true"
+          # only try to post PR comments if it's not a fork
+          GITHUB_COMMENT_REPORTER: ${{ !github.event.pull_request.head.repo.fork }}
           GITHUB_TOKEN: ${{ secrets.github-token }}
 
       # Upload MegaLinter artifacts
