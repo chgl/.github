@@ -1,4 +1,4 @@
-FROM docker.io/library/python:3.12.4-slim@sha256:f11725aba18c19664a408902103365eaf8013823ffc56270f921d1dc78a198cb AS base
+FROM docker.io/library/python:3.12.4-slim@sha256:740d94a19218c8dd584b92f804b1158f85b0d241e5215ea26ed2dcade2b9d138 AS base
 WORKDIR /app
 COPY hello_world.py .
 
