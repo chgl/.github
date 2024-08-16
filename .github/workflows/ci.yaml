@@ -14,7 +14,8 @@ jobs:
   build:
     uses: ./.github/workflows/standard-build.yaml
     permissions:
-      contents: read
+      # used to upload image attestations on release
+      contents: write
       id-token: write
       packages: write
       pull-requests: write
