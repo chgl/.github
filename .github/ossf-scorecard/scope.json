@@ -1,7 +1,15 @@
 {
   "github.com": {
-    "excluded": {
-      "chgl": [".github"]
+    "chgl": {
+      "included": [
+        "charts",
+        "fhir-server-exporter",
+        "kube-powertools",
+        "magniFHIR",
+        "recruit-release-test",
+        "slsa3-test"
+      ],
+      "excluded": []
     }
   }
 }
