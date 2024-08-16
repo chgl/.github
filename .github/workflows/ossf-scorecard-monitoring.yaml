@@ -40,6 +40,10 @@ jobs:
         run: |
           echo '${{ steps.openssf-scorecard-monitor.outputs.scores }}'
 
+      - name: prettify the generated files
+        run: |
+          npx prettier@3.3.3 .github/ossf-scorecard/ --write
+
       - name: Create Pull Request
         uses: gr2m/create-or-update-pull-request-action@86ec1766034c8173518f61d2075cc2a173fb8c97 # v1.9.4
         env:
