@@ -34,7 +34,7 @@ jobs:
   build-without-test-image:
     uses: ./.github/workflows/standard-build.yaml
     permissions:
-      contents: read
+      contents: write
       id-token: write
       packages: write
       pull-requests: write
@@ -52,7 +52,7 @@ jobs:
   lint:
     uses: ./.github/workflows/standard-lint.yaml
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
       issues: write
       security-events: write
