@@ -112,12 +112,12 @@ jobs:
       image-slug: ${{ steps.slugify-image.outputs.slug }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       # <https://docs.docker.com/storage/containerd/>
       # via <https://github.com/docker/setup-buildx-action/issues/257>
@@ -166,7 +166,7 @@ jobs:
       - name: Build unit test image layer
         if: ${{ inputs.enable-build-test-layer == true }}
         id: build_test
-        uses: docker/build-push-action@16ebe778df0e7752d2cfcbd924afdbbd89c1a755 # v6.6.1
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
           context: ${{ inputs.build-context }}
           push: false
@@ -189,7 +189,7 @@ jobs:
 
       - name: Upload test image
         if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: ${{ steps.slugify-image.outputs.slug }}-test
           path: |
@@ -197,7 +197,7 @@ jobs:
 
       - name: Build and push image
         id: build
-        uses: docker/build-push-action@16ebe778df0e7752d2cfcbd924afdbbd89c1a755 # v6.6.1
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
           context: ${{ inputs.build-context }}
           # when in a PR, save the image as a tar archive
@@ -217,7 +217,7 @@ jobs:
 
       - name: Upload container image
         if: ${{ github.event_name == 'pull_request' && inputs.enable-upload-image == true }}
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         with:
           name: ${{ steps.slugify-image.outputs.slug }}
           path: |
@@ -244,7 +244,7 @@ jobs:
             "${{ fromJson(steps.image_meta.outputs.json).tags[0] }}"
 
       - name: Upload image vulnerability attestation
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         if: ${{ inputs.enable-trivy-scan }}
         with:
           name: ${{ steps.slugify-image.outputs.slug }}-trivy-attestation
@@ -314,7 +314,7 @@ jobs:
       packages: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
@@ -347,7 +347,7 @@ jobs:
       packages: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
@@ -396,7 +396,7 @@ jobs:
           cosign download attestation --output-file="$IMAGE_SLUG.intoto.jsonl" "$IMAGE"
 
       - name: upload assets to release
-        uses: softprops/action-gh-release@fb2d03176f42a1f0dd433ca263f314051d3edd44 # v2.0.7
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
         with:
           files: |
             *.intoto.jsonl
