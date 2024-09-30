@@ -17,7 +17,7 @@ on:
 jobs:
   release:
     name: release
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     # run only on pushes. The semantic release default config allows releases
     # to only be created from the default branch ('master'). The ci.yaml
     # is configured to only run on pushes to master as well.
