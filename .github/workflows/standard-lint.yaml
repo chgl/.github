@@ -58,7 +58,7 @@ on:
 jobs:
   megalinter:
     name: MegaLinter
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'pull_request' }}
     permissions:
       issues: write
@@ -95,7 +95,7 @@ jobs:
 
   dependency-review:
     name: dependency review
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     # can only run on PRs or the error is:
     # "Both a base ref and head ref must be provided, either via the `base_ref`/`head_ref` config options, or by running a `pull_request`/`pull_request_target` workflow."
     if: ${{ github.event_name == 'pull_request' }}
@@ -109,7 +109,7 @@ jobs:
 
   gradle-wrapper-validation:
     name: validate gradle wrapper
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: ${{ inputs.enable-validate-gradle-wrapper }}
     permissions:
       contents: read
@@ -121,7 +121,7 @@ jobs:
 
   base-image-signature-verification:
     name: verify Dockerfile base image signature
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: ${{ inputs.enable-verify-base-image-signature }}
     permissions:
       contents: read
@@ -142,7 +142,7 @@ jobs:
 
   codeql-analyze:
     name: CodeQL analyze
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: ${{ inputs.enable-codeql }}
     permissions:
       actions: read
