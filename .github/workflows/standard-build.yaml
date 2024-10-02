@@ -233,11 +233,24 @@ jobs:
           wget https://github.com/aquasecurity/trivy/releases/download/v0.53.0/trivy_0.53.0_Linux-64bit.deb
           sudo dpkg -i trivy_0.53.0_Linux-64bit.deb
 
+      - name: Check trivy db sha
+        id: trivy-db-sha
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          endpoint='/orgs/aquasecurity/packages/container/trivy-db/versions'
+          headers='Accept: application/vnd.github+json'
+          jqFilter='.[] | select(.metadata.container.tags[] | contains("latest")) | .name | sub("sha256:";"")'
+          sha=$(gh api -H "${headers}" "${endpoint}" | jq --raw-output "${jqFilter}")
+          echo "Trivy DB sha256:${sha}"
+          echo "sha=${sha}" >> $GITHUB_OUTPUT
+
       - name: Create Trivy vulnerability attestation
         if: ${{ inputs.enable-trivy-scan }}
         run: |
           trivy image \
             --exit-code=0 \
+            --cache-dir="${{ github.workspace }}/.cache/trivy" \
             --format=cosign-vuln \
             --output=trivy-vuln-attestation.json \
             --ignore-unfixed="${{ inputs.trivy-ignore-unfixed }}" \
@@ -261,11 +274,17 @@ jobs:
         run: |
           trivy image \
             --exit-code=0 \
+            --cache-dir="${{ github.workspace }}/.cache/trivy" \
             --format=template \
             --output=trivy-pr-report.md \
             --template="@trivy-pr-report.md.tpl" \
             --ignore-unfixed="${{ inputs.trivy-ignore-unfixed }}" \
             "${{ fromJson(steps.image_meta.outputs.json).tags[0] }}"
+
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: "${{ github.workspace }}/.cache/trivy"
+          key: ${{ runner.os }}-trivy-db-${{ steps.trivy-db-sha.outputs.sha }}
 
       - name: Add trivy report PR comment
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
