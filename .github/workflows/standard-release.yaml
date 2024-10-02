@@ -47,7 +47,7 @@ jobs:
         uses: cycjimmy/semantic-release-action@b1b432f13acb7768e0c8efdec416d363a57546f2 # v4.1.1
         with:
           extra_plugins: |
-            conventional-changelog-conventionalcommits@5.0.0
+            conventional-changelog-conventionalcommits@8.0.0
             semantic-release-replace-plugin@1.2.0
             @semantic-release/git@10.0.1
         env:
