@@ -243,7 +243,7 @@ jobs:
           jqFilter='.[] | select(.metadata.container.tags[] | contains("latest")) | .name | sub("sha256:";"")'
           sha=$(gh api -H "${headers}" "${endpoint}" | jq --raw-output "${jqFilter}")
           echo "Trivy DB sha256:${sha}"
-          echo "sha=${sha}" >> $GITHUB_OUTPUT
+          echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
 
       - name: Create Trivy vulnerability attestation
         if: ${{ inputs.enable-trivy-scan }}
