@@ -7,6 +7,10 @@ defaults:
   run:
     shell: bash
 
+env:
+  TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+  TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
+
 on:
   workflow_call:
     inputs:
@@ -43,7 +47,7 @@ on:
       java-version:
         description: "The Java version to use by the CodeQL action"
         required: false
-        default: "17"
+        default: "21"
         type: string
       dotnet-version:
         description: "The .NET version to use by the CodeQL action"

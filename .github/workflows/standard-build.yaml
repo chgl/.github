@@ -7,6 +7,12 @@ defaults:
   run:
     shell: bash
 
+env:
+  # renovate: datasource=github-releases depName=aquasecurity/trivy
+  TRIVY_VERSION: 0.56.2
+  TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+  TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
+
 on:
   workflow_call:
     inputs:
@@ -230,27 +236,14 @@ jobs:
 
       - name: install trivy
         run: |
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.53.0/trivy_0.53.0_Linux-64bit.deb
-          sudo dpkg -i trivy_0.53.0_Linux-64bit.deb
-
-      - name: Check trivy db sha
-        id: trivy-db-sha
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          endpoint='/orgs/aquasecurity/packages/container/trivy-db/versions'
-          headers='Accept: application/vnd.github+json'
-          jqFilter='.[] | select(.metadata.container.tags[] | contains("latest")) | .name | sub("sha256:";"")'
-          sha=$(gh api -H "${headers}" "${endpoint}" | jq --raw-output "${jqFilter}")
-          echo "Trivy DB sha256:${sha}"
-          echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
+          wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb
+          sudo dpkg -i trivy_${TRIVY_VERSION}_Linux-64bit.deb
 
       - name: Create Trivy vulnerability attestation
         if: ${{ inputs.enable-trivy-scan }}
         run: |
           trivy image \
             --exit-code=0 \
-            --cache-dir="${{ github.workspace }}/.cache/trivy" \
             --format=cosign-vuln \
             --output=trivy-vuln-attestation.json \
             --ignore-unfixed="${{ inputs.trivy-ignore-unfixed }}" \
@@ -274,7 +267,6 @@ jobs:
         run: |
           trivy image \
             --exit-code=0 \
-            --cache-dir="${{ github.workspace }}/.cache/trivy" \
             --format=template \
             --output=trivy-pr-report.md \
             --template="@trivy-pr-report.md.tpl" \
