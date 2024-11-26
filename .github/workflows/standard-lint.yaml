@@ -69,7 +69,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
       - name: Checkout Code
@@ -80,7 +80,7 @@ jobs:
         id: ml
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/latest/flavors/
-        uses: oxsecurity/megalinter@d8c95fc6f2237031fb9e9322b0f97100168afa6e # v8.2.0
+        uses: oxsecurity/megalinter@1fc052d03c7a43c78fe0fee19c9d648b749e0c01 # v8.3.0
         env:
           VALIDATE_ALL_CODEBASE: "true"
           # only try to post PR comments if it's not a fork
@@ -109,7 +109,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Dependency Review
-        uses: actions/dependency-review-action@4081bf99e2866ebe428fc0477b69eb4fcda7220a # v4.4.0
+        uses: actions/dependency-review-action@3b139cfc5fae8b618d3eae3675e383bb1769c019 # v4.5.0
 
   gradle-wrapper-validation:
     name: validate gradle wrapper
@@ -121,7 +121,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@473878a77f1b98e2b5ac4af93489d1656a80a5ed # v4.2.0
+        uses: gradle/actions/wrapper-validation@cc4fc85e6b35bafd578d5ffbc76a5518407e1af0 # v4.2.1
 
   base-image-signature-verification:
     name: verify Dockerfile base image signature
@@ -176,7 +176,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.4
+        uses: github/codeql-action/init@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -189,7 +189,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.4
+        uses: github/codeql-action/autobuild@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -202,6 +202,6 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.4
+        uses: github/codeql-action/analyze@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
         with:
           category: "/language:${{matrix.language}}"
