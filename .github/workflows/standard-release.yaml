@@ -18,7 +18,7 @@ on:
     secrets:
       semantic-release-token:
         description: "The PAT used by the semantic release action"
-        required: true
+        required: false
       app-token-app-id:
         description: "App ID when using a GitHub app for auth"
         required: false
