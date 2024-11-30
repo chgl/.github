@@ -9,9 +9,7 @@ defaults:
 
 env:
   # renovate: datasource=github-releases depName=aquasecurity/trivy
-  TRIVY_VERSION: 0.56.2
-  TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
-  TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
+  TRIVY_VERSION: 0.57.1
 
 on:
   workflow_call:
@@ -236,8 +234,8 @@ jobs:
 
       - name: install trivy
         run: |
-          wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb
-          sudo dpkg -i trivy_${TRIVY_VERSION}_Linux-64bit.deb
+          wget "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb"
+          sudo dpkg -i "trivy_${TRIVY_VERSION}_Linux-64bit.deb"
 
       - name: Create Trivy vulnerability attestation
         if: ${{ inputs.enable-trivy-scan }}
@@ -272,11 +270,6 @@ jobs:
             --template="@trivy-pr-report.md.tpl" \
             --ignore-unfixed="${{ inputs.trivy-ignore-unfixed }}" \
             "${{ fromJson(steps.image_meta.outputs.json).tags[0] }}"
-
-      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
-        with:
-          path: "${{ github.workspace }}/.cache/trivy"
-          key: ${{ runner.os }}-trivy-db-${{ steps.trivy-db-sha.outputs.sha }}
 
       - name: Add trivy report PR comment
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
