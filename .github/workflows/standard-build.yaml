@@ -122,6 +122,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       # <https://docs.docker.com/storage/containerd/>
       # via <https://github.com/docker/setup-buildx-action/issues/257>
@@ -239,13 +241,16 @@ jobs:
 
       - name: Create Trivy vulnerability attestation
         if: ${{ inputs.enable-trivy-scan }}
+        env:
+          TRIVY_IGNORE_UNFIXED: ${{ inputs.trivy-ignore-unfixed }}
+          IMAGE_TO_SCAN: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
         run: |
           trivy image \
             --exit-code=0 \
             --format=cosign-vuln \
             --output=trivy-vuln-attestation.json \
-            --ignore-unfixed="${{ inputs.trivy-ignore-unfixed }}" \
-            "${{ fromJson(steps.image_meta.outputs.json).tags[0] }}"
+            --ignore-unfixed="${TRIVY_IGNORE_UNFIXED}" \
+            "${IMAGE_TO_SCAN}"
 
       - name: Upload image vulnerability attestation
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
@@ -262,14 +267,17 @@ jobs:
 
       - name: Run Trivy vulnerability scanner for PR comment
         if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan }}
+        env:
+          TRIVY_IGNORE_UNFIXED: ${{ inputs.trivy-ignore-unfixed }}
+          IMAGE_TO_SCAN: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
         run: |
           trivy image \
             --exit-code=0 \
             --format=template \
             --output=trivy-pr-report.md \
             --template="@trivy-pr-report.md.tpl" \
-            --ignore-unfixed="${{ inputs.trivy-ignore-unfixed }}" \
-            "${{ fromJson(steps.image_meta.outputs.json).tags[0] }}"
+            --ignore-unfixed="${TRIVY_IGNORE_UNFIXED}" \
+            "${IMAGE_TO_SCAN}"
 
       - name: Add trivy report PR comment
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
