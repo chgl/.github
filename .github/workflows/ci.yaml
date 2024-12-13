@@ -8,8 +8,6 @@ on:
   pull_request:
     branches: [master]
 
-permissions: read-all
-
 jobs:
   build:
     uses: ./.github/workflows/standard-build.yaml
