@@ -52,7 +52,7 @@ on:
       dotnet-version:
         description: "The .NET version to use by the CodeQL action"
         required: false
-        default: "8.0.x"
+        default: "9.0.x"
         type: string
     secrets:
       github-token:
@@ -223,7 +223,7 @@ jobs:
           category: "/language:${{matrix.language}}"
 
   zizmor:
-    name: zizmor
+    name: zizmor scan
     runs-on: ubuntu-24.04
     permissions:
       security-events: write
@@ -238,8 +238,9 @@ jobs:
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@887a942a15af3a7626099df99e897a18d9e5ab3a # v5.1.0
 
-      - name: Run zizmor 🌈
-        run: uvx zizmor@0.9.1 --format sarif . > results.sarif
+      - name: Run zizmor (sarif)
+        run: |
+          uvx zizmor@0.10.0 --pedantic --format sarif . > results.sarif
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -248,3 +249,9 @@ jobs:
         with:
           sarif_file: results.sarif
           category: zizmor
+
+      - name: Run zizmor (fail on findings)
+        run: |
+          uvx zizmor@0.10.0 --verbose --pedantic --format plain .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
