@@ -23,8 +23,8 @@ jobs:
       security-events: write
     with:
       # can't use the default "ghcr.io/${{ github.repository }}" since
-      # "ghcr.io/miracum/.github:pr-1": invalid reference format"
-      image: ghcr.io/miracum/github-reusable-workflow
+      # "ghcr.io/chgl/.github:pr-1": invalid reference format"
+      image: ghcr.io/chgl/github-reusable-workflow
       enable-build-test-layer: true
       enable-upload-test-image: true
       platforms: linux/amd64,linux/arm64
@@ -41,7 +41,7 @@ jobs:
       actions: read
       security-events: write
     with:
-      image: ghcr.io/miracum/github-reusable-workflow-without-test-image
+      image: ghcr.io/chgl/github-reusable-workflow-without-test-image
       enable-build-test-layer: false
       enable-upload-test-image: false
     secrets:
@@ -57,7 +57,7 @@ jobs:
       actions: read
       security-events: write
     with:
-      image: ghcr.io/miracum/github-reusable-workflow-with-fixed-image-tags
+      image: ghcr.io/chgl/github-reusable-workflow-with-fixed-image-tags
       enable-build-test-layer: true
       enable-upload-test-image: true
       image-tags: |
