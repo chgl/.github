@@ -140,4 +140,4 @@ jobs:
       pull-requests: write
       issues: write
     secrets:
-      semantic-release-token: ${{ secrets.RELEASE_TOKEN }}
+      semantic-release-token: ${{ secrets.GITHUB_TOKEN }}
