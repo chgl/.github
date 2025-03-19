@@ -9,7 +9,9 @@ defaults:
 
 env:
   # renovate: datasource=github-releases depName=aquasecurity/trivy
-  TRIVY_VERSION: 0.57.1
+  TRIVY_VERSION: 0.60.0
+  TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+  TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
 
 on:
   workflow_call:
@@ -130,6 +132,7 @@ jobs:
       - name: Set up containerd image store
         shell: bash
         run: |
+          [ -f /etc/docker/daemon.json ] || echo "{}" | sudo tee /etc/docker/daemon.json
           jq '. | .+{"features": {"containerd-snapshotter": true}}' /etc/docker/daemon.json > /tmp/docker-daemon-with-containerd.json
           sudo mv /tmp/docker-daemon-with-containerd.json /etc/docker/daemon.json
           cat /etc/docker/daemon.json
@@ -139,12 +142,15 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        with:
+          # zizmor: runtime artifacts potentially vulnerable to a cache poisoning attack
+          cache-binary: false
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         if: ${{ github.event_name != 'pull_request' }}
         with:
           registry: ghcr.io
@@ -242,6 +248,7 @@ jobs:
       - name: Create Trivy vulnerability attestation
         if: ${{ inputs.enable-trivy-scan }}
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           TRIVY_IGNORE_UNFIXED: ${{ inputs.trivy-ignore-unfixed }}
           IMAGE_TO_SCAN: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
         run: |
@@ -268,6 +275,7 @@ jobs:
       - name: Run Trivy vulnerability scanner for PR comment
         if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan }}
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           TRIVY_IGNORE_UNFIXED: ${{ inputs.trivy-ignore-unfixed }}
           IMAGE_TO_SCAN: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
         run: |
@@ -287,6 +295,22 @@ jobs:
           recreate: true
           header: "trivy-report-comment-${{ steps.slugify-image.outputs.slug }}"
           path: trivy-pr-report.md
+
+      - name: Generate SBOMs
+        env:
+          IMAGE_TO_SCAN: ${{ fromJson(steps.image_meta.outputs.json).tags[0] }}
+          IMAGE_SLUG: ${{ steps.slugify-image.outputs.slug }}
+        run: |
+          mkdir -p sboms/
+          trivy image --format cyclonedx -o "sboms/$IMAGE_SLUG-sbom.cdx.json" "$IMAGE_TO_SCAN"
+          trivy image --format spdx-json -o "sboms/$IMAGE_SLUG-sbom.spdx.json" "$IMAGE_TO_SCAN"
+
+      - name: Upload SBOMs
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: ${{ steps.slugify-image.outputs.slug }}-sboms
+          path: |
+            ./sboms/
 
     # requires content: write access
     #   - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
@@ -331,7 +355,7 @@ jobs:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -364,7 +388,7 @@ jobs:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -397,6 +421,11 @@ jobs:
       # to upload artifacts to the release
       contents: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit # change to 'egress-policy: block' after couple of runs
+
       - name: Install Cosign
         uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
 
@@ -412,3 +441,34 @@ jobs:
         with:
           files: |
             *.intoto.jsonl
+
+  upload-sbom-to-release:
+    name: upload image SBOMs to release assets
+    runs-on: ubuntu-24.04
+    needs:
+      - build
+    permissions:
+      # to upload artifacts to the release
+      contents: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit # change to 'egress-policy: block' after couple of runs
+
+      - name: Download sboms
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        with:
+          name: ${{ needs.build.outputs.image-slug }}-sboms
+          path: ./sboms
+
+      - name: Display structure of downloaded files
+        run: ls -R .
+
+      - name: upload assets to release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            ./sboms/*.json
