@@ -76,6 +76,8 @@ jobs:
     with:
       codeql-languages: '["python"]'
       enable-codeql: true
+      enable-validate-gradle-wrapper: false
+      enable-verify-base-image-signature: false
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 
