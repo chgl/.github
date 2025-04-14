@@ -288,7 +288,7 @@ jobs:
             "${IMAGE_TO_SCAN}"
 
       - name: Add trivy report PR comment
-        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2.9.1
+        uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
         # when running from a fork, the CI token doesn't have enough permissions to create PR comments
         if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan && !github.event.pull_request.head.repo.fork }}
         with:
