@@ -8,8 +8,8 @@ defaults:
     shell: bash
 
 env:
-  TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
-  TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
+  # renovate: datasource=pypi depName=zizmor extractVersion=^(?<version>.*)$
+  ZIZMOR_VERSION: 1.5.1
 
 on:
   workflow_call:
@@ -89,6 +89,7 @@ jobs:
           # only try to post PR comments if it's not a fork
           GITHUB_COMMENT_REPORTER: ${{ !github.event.pull_request.head.repo.fork }}
           GITHUB_TOKEN: ${{ secrets.github-token }}
+          SARIF_REPORTER: "true"
 
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
@@ -99,6 +100,12 @@ jobs:
           path: |
             megalinter-reports
             mega-linter.log
+
+      - name: Upload MegaLinter scan results to GitHub Security tab
+        if: ${{ always() }}
+        uses: github/codeql-action/upload-sarif@fc7e4a0fa01c3cca5fd6a1fddec5c0740c977aa2 # v3.28.14
+        with:
+          sarif_file: "megalinter-reports/megalinter-report.sarif"
 
   dependency-review:
     name: dependency review
@@ -113,7 +120,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-
       - name: Dependency Review
         uses: actions/dependency-review-action@ce3cf9537a52e8119d91fd484ab5b8a807627bf8 # v4.6.0
 
@@ -128,7 +134,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
 
@@ -144,19 +149,18 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-
       - name: Install Cosign
         uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
-      - env:
-          CERTIFICATE_OIDC_ISSUER: ${{ inputs.verify-base-image-certificate-oidc-issuer }}
-          CERTIFICATE_IDENTITY: ${{ inputs.verify-base-image-certificate-identity }}
-        run: |
+      - run: |
           cosign dockerfile verify \
             --output text \
             --base-image-only \
-            --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}" \
+            --certificate-oidc-issuer "${OIDC_ISSUER}" \
             --certificate-identity "${CERTIFICATE_IDENTITY}" \
             Dockerfile
+        env:
+          OIDC_ISSUER: ${{ inputs.verify-base-image-certificate-oidc-issuer }}
+          CERTIFICATE_IDENTITY: ${{ inputs.verify-base-image-certificate-identity }}
 
   codeql-analyze:
     name: CodeQL analyze
@@ -178,7 +182,7 @@ jobs:
 
       - name: Set up Java
         if: ${{ matrix.language == 'java' }}
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: ${{ inputs.java-version }}
           distribution: "temurin"
@@ -192,7 +196,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@45775bd8235c68ba998cffa5171334d58593da47 # v3.28.15
+        uses: github/codeql-action/init@fc7e4a0fa01c3cca5fd6a1fddec5c0740c977aa2 # v3.28.14
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -205,7 +209,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@45775bd8235c68ba998cffa5171334d58593da47 # v3.28.15
+        uses: github/codeql-action/autobuild@fc7e4a0fa01c3cca5fd6a1fddec5c0740c977aa2 # v3.28.14
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -218,13 +222,14 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@45775bd8235c68ba998cffa5171334d58593da47 # v3.28.15
+        uses: github/codeql-action/analyze@fc7e4a0fa01c3cca5fd6a1fddec5c0740c977aa2 # v3.28.14
         with:
           category: "/language:${{matrix.language}}"
 
   zizmor:
     name: zizmor scan
     runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'pull_request' }}
     permissions:
       security-events: write
       contents: read
@@ -237,21 +242,23 @@ jobs:
 
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
+        with:
+          enable-cache: false
 
       - name: Run zizmor (sarif)
         run: |
-          uvx zizmor@0.10.0 --pedantic --format sarif . > results.sarif
+          uvx "zizmor@${ZIZMOR_VERSION}" --pedantic --format sarif . > results.sarif
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@45775bd8235c68ba998cffa5171334d58593da47 # v3.28.15
+        uses: github/codeql-action/upload-sarif@fc7e4a0fa01c3cca5fd6a1fddec5c0740c977aa2 # v3.28.14
         with:
           sarif_file: results.sarif
           category: zizmor
 
       - name: Run zizmor (fail on findings)
         run: |
-          uvx zizmor@0.10.0 --verbose --pedantic --format plain .
+          uvx "zizmor@${ZIZMOR_VERSION}" --verbose --pedantic --format plain .
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
