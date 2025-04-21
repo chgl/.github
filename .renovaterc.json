@@ -26,10 +26,8 @@
         "^\\.github\\/workflows\\/standard-lint\\.yaml$"
       ],
       "matchStrings": [
-        "\\s+# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( extractVersion=(?<extractVersion>.*?))?\\r?\\n\\s*.*_VERSION: (?<currentValue>.*)$"
-      ],
-      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
-      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v(?<version>.*)${{/if}}"
+        "\\s+# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( extractVersion=(?<extractVersion>.*?))?\\s.+?_VERSION: (?<currentValue>.*)$"
+      ]
     }
   ]
 }
