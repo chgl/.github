@@ -9,21 +9,30 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
       "automerge": true
     },
     {
-      "matchManagers": ["github-actions"],
-      "matchPackageNames": ["slsa-framework/slsa-github-generator"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchPackageNames": [
+        "slsa-framework/slsa-github-generator"
+      ],
       "pinDigests": false
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
-        "^\\.github\\/workflows\\/standard-build\\.yaml$",
-        "^\\.github\\/workflows\\/standard-lint\\.yaml$"
+      "managerFilePatterns": [
+        "/^\\.github\\/workflows\\/standard-build\\.yaml$/",
+        "/^\\.github\\/workflows\\/standard-lint\\.yaml$/"
       ],
       "matchStrings": [
         "\\s+# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( extractVersion=(?<extractVersion>.*?))?\\s.+?_VERSION: (?<currentValue>.*)"
