@@ -180,7 +180,7 @@ jobs:
         id: build_test
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          context: ${{ inputs.build-context }}
+          context: ${{ inputs.build-context }} # zizmor: ignore[template-injection]
           push: false
           load: true
           outputs: type=oci,dest=./image-test.tar
@@ -211,7 +211,7 @@ jobs:
         id: build
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          context: ${{ inputs.build-context }}
+          context: ${{ inputs.build-context }} # zizmor: ignore[template-injection]
           # when in a PR, save the image as a tar archive
           # this way, we can save it as an artifact in later steps
           # otherwise (on branch-push or releases), push the image to
@@ -237,7 +237,6 @@ jobs:
 
       - name: display images
         run: |
-          ls -lsa ${{ github.workspace }}
           docker image ls -a
 
       - name: install trivy
