@@ -141,7 +141,7 @@ jobs:
           docker info -f '{{ .DriverStatus }}'
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
         with:
           # zizmor: runtime artifacts potentially vulnerable to a cache poisoning attack
           cache-binary: false
@@ -287,7 +287,7 @@ jobs:
             "${IMAGE_TO_SCAN}"
 
       - name: Add trivy report PR comment
-        uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+        uses: marocchino/sticky-pull-request-comment@d2ad0de260ae8b0235ce059e63f2949ba9e05943 # v2.9.3
         # when running from a fork, the CI token doesn't have enough permissions to create PR comments
         if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan && !github.event.pull_request.head.repo.fork }}
         with:
@@ -361,7 +361,7 @@ jobs:
           password: ${{ secrets.github-token }}
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+        uses: sigstore/cosign-installer@fb28c2b6339dcd94da6e4cbcbc5e888961f6f8c3 # v3.9.0
 
       - name: Sign image
         env:
@@ -400,7 +400,7 @@ jobs:
           path: /tmp
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+        uses: sigstore/cosign-installer@fb28c2b6339dcd94da6e4cbcbc5e888961f6f8c3 # v3.9.0
 
       - name: Attest image vulnerability report
         env:
@@ -426,7 +426,7 @@ jobs:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+        uses: sigstore/cosign-installer@fb28c2b6339dcd94da6e4cbcbc5e888961f6f8c3 # v3.9.0
 
       - name: download attestation from image
         env:
