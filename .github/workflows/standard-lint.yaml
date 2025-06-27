@@ -9,7 +9,7 @@ defaults:
 
 env:
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.9.0
+  ZIZMOR_VERSION: 1.10.0
 
 on:
   workflow_call:
@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload MegaLinter scan results to GitHub Security tab
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        uses: github/codeql-action/upload-sarif@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
         with:
           sarif_file: "megalinter-reports/megalinter-report.sarif"
 
@@ -150,7 +150,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Install Cosign
-        uses: sigstore/cosign-installer@fb28c2b6339dcd94da6e4cbcbc5e888961f6f8c3 # v3.9.0
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
       - run: |
           cosign dockerfile verify \
             --output text \
@@ -196,7 +196,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        uses: github/codeql-action/init@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -209,7 +209,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        uses: github/codeql-action/autobuild@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -222,7 +222,7 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        uses: github/codeql-action/analyze@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
         with:
           category: "/language:${{matrix.language}}"
 
@@ -241,7 +241,7 @@ jobs:
           persist-credentials: false
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@445689ea25e0de0a23313031f5fe577c74ae45a1 # v6.3.0
+        uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba # v6.3.1
         with:
           enable-cache: false
 
@@ -252,7 +252,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3.29.0
+        uses: github/codeql-action/upload-sarif@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
         with:
           sarif_file: results.sarif
           category: zizmor
