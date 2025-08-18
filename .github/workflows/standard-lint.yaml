@@ -9,7 +9,7 @@ defaults:
 
 env:
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.11.0
+  ZIZMOR_VERSION: 1.12.1
 
 on:
   workflow_call:
@@ -74,7 +74,7 @@ jobs:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           persist-credentials: false
 
@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload MegaLinter scan results to GitHub Security tab
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.5
+        uses: github/codeql-action/upload-sarif@df559355d593797519d70b90fc8edd5db049e7a2 # v3.29.9
         with:
           sarif_file: "megalinter-reports/megalinter-report.sarif"
 
@@ -117,7 +117,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           persist-credentials: false
       - name: Dependency Review
@@ -131,11 +131,11 @@ jobs:
       contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           persist-credentials: false
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/wrapper-validation@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
 
   base-image-signature-verification:
     name: verify Dockerfile base image signature
@@ -145,7 +145,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -176,7 +176,7 @@ jobs:
         language: ${{ fromJSON(inputs.codeql-languages) }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           persist-credentials: false
 
@@ -196,7 +196,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.5
+        uses: github/codeql-action/init@df559355d593797519d70b90fc8edd5db049e7a2 # v3.29.9
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -209,7 +209,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.5
+        uses: github/codeql-action/autobuild@df559355d593797519d70b90fc8edd5db049e7a2 # v3.29.9
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -222,7 +222,7 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.5
+        uses: github/codeql-action/analyze@df559355d593797519d70b90fc8edd5db049e7a2 # v3.29.9
         with:
           category: "/language:${{matrix.language}}"
 
@@ -236,12 +236,12 @@ jobs:
       actions: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           persist-credentials: false
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc # v6.4.3
+        uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1 # v6.5.0
         with:
           enable-cache: false
 
@@ -252,7 +252,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.5
+        uses: github/codeql-action/upload-sarif@df559355d593797519d70b90fc8edd5db049e7a2 # v3.29.9
         with:
           sarif_file: results.sarif
           category: zizmor
