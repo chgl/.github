@@ -9,7 +9,7 @@ defaults:
 
 env:
   # renovate: datasource=github-releases depName=aquasecurity/trivy
-  TRIVY_VERSION: 0.65.0
+  TRIVY_VERSION: 0.66.0
   TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
   TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
 
@@ -436,7 +436,7 @@ jobs:
           cosign download attestation --output-file="$IMAGE_SLUG.intoto.jsonl" "$IMAGE"
 
       - name: upload assets to release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         with:
           files: |
             *.intoto.jsonl
@@ -465,7 +465,7 @@ jobs:
         run: ls -R .
 
       - name: upload assets to release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
+        uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         with:
           fail_on_unmatched_files: true
