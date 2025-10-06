@@ -9,7 +9,7 @@ defaults:
 
 env:
   # renovate: datasource=github-releases depName=aquasecurity/trivy
-  TRIVY_VERSION: 0.66.0
+  TRIVY_VERSION: 0.67.0
   TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
   TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
 
@@ -150,7 +150,7 @@ jobs:
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         if: ${{ github.event_name != 'pull_request' }}
         with:
           registry: ghcr.io
@@ -354,7 +354,7 @@ jobs:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -387,7 +387,7 @@ jobs:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -436,7 +436,7 @@ jobs:
           cosign download attestation --output-file="$IMAGE_SLUG.intoto.jsonl" "$IMAGE"
 
       - name: upload assets to release
-        uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
+        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
         with:
           files: |
             *.intoto.jsonl
@@ -465,7 +465,7 @@ jobs:
         run: ls -R .
 
       - name: upload assets to release
-        uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
+        uses: softprops/action-gh-release@62c96d0c4e8a889135c1f3a25910db8dbe0e85f7 # v2.3.4
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         with:
           fail_on_unmatched_files: true

@@ -9,7 +9,7 @@ defaults:
 
 env:
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.14.1
+  ZIZMOR_VERSION: 1.14.2
 
 on:
   workflow_call:
@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload MegaLinter scan results to GitHub Security tab
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
+        uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
         with:
           sarif_file: "megalinter-reports/megalinter-report.sarif"
 
@@ -135,7 +135,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/wrapper-validation@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
 
   base-image-signature-verification:
     name: verify Dockerfile base image signature
@@ -196,7 +196,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
+        uses: github/codeql-action/init@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -209,7 +209,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
+        uses: github/codeql-action/autobuild@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -222,7 +222,7 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
+        uses: github/codeql-action/analyze@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
         with:
           category: "/language:${{matrix.language}}"
 
@@ -241,7 +241,7 @@ jobs:
           persist-credentials: false
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6.7.0
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: false
 
@@ -262,7 +262,7 @@ jobs:
           ZIZMOR_CONFIG: /tmp/zizmor-standard-lint-defaults.yaml
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@3599b3baa15b485a2e49ef411a7a4bb2452e7f93 # v3.30.5
+        uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
         with:
           sarif_file: results.sarif
           category: zizmor
