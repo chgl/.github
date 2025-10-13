@@ -83,7 +83,7 @@ jobs:
         id: ml
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/latest/flavors/
-        uses: oxsecurity/megalinter@0dcbedd66ea456ba2d54fd350affaa15df8a0da3 # v9.0.1
+        uses: oxsecurity/megalinter@62c799d895af9bcbca5eacfebca29d527f125a57 # v9.1.0
         env:
           VALIDATE_ALL_CODEBASE: "true"
           # only try to post PR comments if it's not a fork
@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload MegaLinter scan results to GitHub Security tab
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+        uses: github/codeql-action/upload-sarif@755f44910c12a3d7ca0d8c6e42c048b3362f7cec # v3.30.8
         with:
           sarif_file: "megalinter-reports/megalinter-report.sarif"
 
@@ -121,7 +121,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Dependency Review
-        uses: actions/dependency-review-action@56339e523c0409420f6c2c9a2f4292bbb3c07dd3 # v4.8.0
+        uses: actions/dependency-review-action@40c09b7dc99638e5ddb0bfd91c1673effc064d8a # v4.8.1
 
   gradle-wrapper-validation:
     name: validate gradle wrapper
@@ -196,7 +196,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+        uses: github/codeql-action/init@755f44910c12a3d7ca0d8c6e42c048b3362f7cec # v3.30.8
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -209,7 +209,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+        uses: github/codeql-action/autobuild@755f44910c12a3d7ca0d8c6e42c048b3362f7cec # v3.30.8
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -222,7 +222,7 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+        uses: github/codeql-action/analyze@755f44910c12a3d7ca0d8c6e42c048b3362f7cec # v3.30.8
         with:
           category: "/language:${{matrix.language}}"
 
@@ -262,7 +262,7 @@ jobs:
           ZIZMOR_CONFIG: /tmp/zizmor-standard-lint-defaults.yaml
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+        uses: github/codeql-action/upload-sarif@755f44910c12a3d7ca0d8c6e42c048b3362f7cec # v3.30.8
         with:
           sarif_file: results.sarif
           category: zizmor
