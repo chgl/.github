@@ -9,21 +9,12 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest"
-      ],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true
     },
     {
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchPackageNames": [
-        "slsa-framework/slsa-github-generator"
-      ],
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["slsa-framework/slsa-github-generator"],
       "pinDigests": false
     }
   ],
