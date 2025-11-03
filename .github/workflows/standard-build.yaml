@@ -201,7 +201,7 @@ jobs:
 
       - name: Upload test image
         if: ${{ (inputs.enable-build-test-layer == true) && (inputs.enable-upload-test-image == true) }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ steps.slugify-image.outputs.slug }}-test
           path: |
@@ -229,7 +229,7 @@ jobs:
 
       - name: Upload container image
         if: ${{ github.event_name == 'pull_request' && inputs.enable-upload-image == true }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ steps.slugify-image.outputs.slug }}
           path: |
@@ -259,7 +259,7 @@ jobs:
             "${IMAGE_TO_SCAN}"
 
       - name: Upload image vulnerability attestation
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: ${{ inputs.enable-trivy-scan }}
         with:
           name: ${{ steps.slugify-image.outputs.slug }}-trivy-attestation
@@ -305,7 +305,7 @@ jobs:
           trivy image --format spdx-json -o "sboms/$IMAGE_SLUG-sbom.spdx.json" "$IMAGE_TO_SCAN"
 
       - name: Upload SBOMs
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ steps.slugify-image.outputs.slug }}-sboms
           path: |
@@ -394,7 +394,7 @@ jobs:
           password: ${{ secrets.github-token }}
 
       - name: Download attestations
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: ${{ needs.build.outputs.image-slug }}-trivy-attestation
           path: /tmp
@@ -456,7 +456,7 @@ jobs:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Download sboms
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: ${{ needs.build.outputs.image-slug }}-sboms
           path: ./sboms
