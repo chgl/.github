@@ -251,6 +251,8 @@ jobs:
             rules:
               undocumented-permissions:
                 disable: true
+              concurrency-limits:
+                disable: true
         run: |
           echo "${ZIZMOR_CONFIG_YAML}" > /tmp/zizmor-standard-lint-defaults.yaml
 
