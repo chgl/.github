@@ -60,7 +60,7 @@ jobs:
       # Only required temporary: https://github.com/cycjimmy/semantic-release-action/issues/159
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@9cc899c47e6841430bbaedb43de1560a568dfd16 # v5.0.0
