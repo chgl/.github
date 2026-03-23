@@ -88,7 +88,7 @@ jobs:
           VALIDATE_ALL_CODEBASE: "true"
           # only try to post PR comments if it's not a fork
           GITHUB_COMMENT_REPORTER: ${{ !github.event.pull_request.head.repo.fork }}
-          GITHUB_TOKEN: ${{ secrets.github-token }}
+          GITHUB_TOKEN: ${{ secrets.github-token }} # zizmor: ignore[secrets-outside-env]
           SARIF_REPORTER: "true"
 
       # Upload MegaLinter artifacts
@@ -253,12 +253,8 @@ jobs:
                 disable: true
               concurrency-limits:
                 disable: true
-              secrets-outside-env:
-                config:
-                  allow:
-                    - semantic-release-token
-                    - app-token-private-key
-                    - app-token-app-id
+              superfluous-actions:
+                disable: true
         run: |
           echo "${ZIZMOR_CONFIG_YAML}" > /tmp/zizmor-standard-lint-defaults.yaml
 
