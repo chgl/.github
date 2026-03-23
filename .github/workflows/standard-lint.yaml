@@ -253,6 +253,12 @@ jobs:
                 disable: true
               concurrency-limits:
                 disable: true
+              secrets-outside-env:
+                config:
+                  allow:
+                    - semantic-release-token
+                    - app-token-private-key
+                    - app-token-app-id
         run: |
           echo "${ZIZMOR_CONFIG_YAML}" > /tmp/zizmor-standard-lint-defaults.yaml
 
