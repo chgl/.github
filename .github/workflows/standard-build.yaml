@@ -361,7 +361,7 @@ jobs:
           password: ${{ secrets.github-token }} # zizmor: ignore[secrets-outside-env]
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
 
       - name: Sign image
         env:
@@ -400,7 +400,7 @@ jobs:
           path: /tmp
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
 
       - name: Attest image vulnerability report
         env:
@@ -426,7 +426,7 @@ jobs:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
 
       - name: download attestation from image
         env:

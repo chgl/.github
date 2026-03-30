@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload MegaLinter scan results to GitHub Security tab
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         with:
           sarif_file: "megalinter-reports/megalinter-report.sarif"
 
@@ -135,7 +135,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@0f4528296b4bc09e8ae0fc7be30185a4ab435545 # v6.0.0
+        uses: gradle/actions/wrapper-validation@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
 
   base-image-signature-verification:
     name: verify Dockerfile base image signature
@@ -150,7 +150,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Install Cosign
-        uses: sigstore/cosign-installer@ba7bc0a3fef59531c69a25acd34668d6d3fe6f22 # v4.1.0
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
       - run: |
           cosign dockerfile verify \
             --output text \
@@ -196,7 +196,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -209,7 +209,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+        uses: github/codeql-action/autobuild@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -222,7 +222,7 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         with:
           category: "/language:${{matrix.language}}"
 
@@ -266,7 +266,7 @@ jobs:
           ZIZMOR_CONFIG: /tmp/zizmor-standard-lint-defaults.yaml
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+        uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
         with:
           sarif_file: results.sarif
           category: zizmor
