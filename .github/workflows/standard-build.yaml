@@ -9,7 +9,7 @@ defaults:
 
 env:
   # renovate: datasource=github-releases depName=aquasecurity/trivy
-  TRIVY_VERSION: 0.69.3
+  TRIVY_VERSION: 0.70.0
   TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
   TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db:1
 
@@ -118,7 +118,7 @@ jobs:
       image-slug: ${{ steps.slugify-image.outputs.slug }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
@@ -349,7 +349,7 @@ jobs:
       packages: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
@@ -382,7 +382,7 @@ jobs:
       packages: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
@@ -421,7 +421,7 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
@@ -451,7 +451,7 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
