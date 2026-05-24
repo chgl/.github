@@ -287,15 +287,16 @@ jobs:
             "${IMAGE_TO_SCAN}"
 
       - name: Upload trivy report to step summary and truncate PR comment if too long
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan && !github.event.pull_request.head.repo.fork }}
+        if: ${{ github.event_name == 'pull_request' && inputs.enable-trivy-scan }}
         env:
           SUMMARY_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          IS_FORK: "${{ github.event.pull_request.head.repo.fork }}"
         run: |
           cat trivy-pr-report.md >> "$GITHUB_STEP_SUMMARY"
           # GitHub PR comments are limited to 65536 characters
           MAX_PR_COMMENT_SIZE=65536
           report_size=$(wc -c < trivy-pr-report.md)
-          if [ "$report_size" -gt "$MAX_PR_COMMENT_SIZE" ]; then
+          if [ "$IS_FORK" != "true" ] && [ "$report_size" -gt "$MAX_PR_COMMENT_SIZE" ]; then
             printf "The Trivy vulnerability report is too large to display as a PR comment.\n\nPlease view the full report in the [workflow run summary](%s).\n" "$SUMMARY_URL" > trivy-pr-report.md
           fi
 
