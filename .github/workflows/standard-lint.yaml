@@ -78,6 +78,19 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Create standard zizmor rules file
+        env:
+          ZIZMOR_CONFIG_YAML: |
+            rules:
+              undocumented-permissions:
+                disable: true
+              concurrency-limits:
+                disable: true
+              superfluous-actions:
+                disable: true
+        run: |
+          echo "${ZIZMOR_CONFIG_YAML}" > /tmp/zizmor-standard-lint-defaults.yaml
+
       # MegaLinter
       - name: MegaLinter
         id: ml
@@ -90,6 +103,8 @@ jobs:
           GITHUB_COMMENT_REPORTER: ${{ !github.event.pull_request.head.repo.fork }}
           GITHUB_TOKEN: ${{ secrets.github-token }} # zizmor: ignore[secrets-outside-env]
           SARIF_REPORTER: "true"
+          ACTION_ZIZMOR_CONFIG_FILE: /tmp/zizmor-standard-lint-defaults.yaml
+          ACTION_ZIZMOR_UNSECURED_ENV_VARIABLES: GITHUB_TOKEN
 
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
@@ -225,55 +240,3 @@ jobs:
         uses: github/codeql-action/analyze@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         with:
           category: "/language:${{matrix.language}}"
-
-  zizmor:
-    name: zizmor scan
-    runs-on: ubuntu-24.04
-    if: ${{ github.event_name == 'pull_request' }}
-    permissions:
-      security-events: write
-      contents: read
-      actions: read
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-        with:
-          enable-cache: false
-
-      - name: Create standard zizmor rules file
-        env:
-          ZIZMOR_CONFIG_YAML: |
-            rules:
-              undocumented-permissions:
-                disable: true
-              concurrency-limits:
-                disable: true
-              superfluous-actions:
-                disable: true
-        run: |
-          echo "${ZIZMOR_CONFIG_YAML}" > /tmp/zizmor-standard-lint-defaults.yaml
-
-      - name: Run zizmor (sarif)
-        run: |
-          uvx "zizmor@${ZIZMOR_VERSION}" --pedantic --format sarif . > results.sarif
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZIZMOR_CONFIG: /tmp/zizmor-standard-lint-defaults.yaml
-
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
-        with:
-          sarif_file: results.sarif
-          category: zizmor
-
-      - name: Run zizmor (fail on findings)
-        run: |
-          uvx "zizmor@${ZIZMOR_VERSION}" --verbose --pedantic --format plain .
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZIZMOR_CONFIG: /tmp/zizmor-standard-lint-defaults.yaml
