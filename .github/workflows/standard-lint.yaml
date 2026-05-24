@@ -89,7 +89,7 @@ jobs:
               superfluous-actions:
                 disable: true
         run: |
-          echo "${ZIZMOR_CONFIG_YAML}" > /tmp/zizmor-standard-lint-defaults.yaml
+          echo "${ZIZMOR_CONFIG_YAML}" > ./zizmor-standard-lint-defaults.yaml
 
       # MegaLinter
       - name: MegaLinter
@@ -103,8 +103,9 @@ jobs:
           GITHUB_COMMENT_REPORTER: ${{ !github.event.pull_request.head.repo.fork }}
           GITHUB_TOKEN: ${{ secrets.github-token }} # zizmor: ignore[secrets-outside-env]
           SARIF_REPORTER: "true"
-          ACTION_ZIZMOR_CONFIG_FILE: /tmp/zizmor-standard-lint-defaults.yaml
+          ACTION_ZIZMOR_CONFIG_FILE: ./zizmor-standard-lint-defaults.yaml
           ACTION_ZIZMOR_UNSECURED_ENV_VARIABLES: GITHUB_TOKEN
+          REPOSITORY_OSV_SCANNER_ARGUMENTS: --allow-no-lockfiles
 
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
