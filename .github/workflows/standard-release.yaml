@@ -50,7 +50,7 @@ jobs:
           client-id: ${{ secrets.app-token-app-id }} # zizmor: ignore[secrets-outside-env]
           private-key: ${{ secrets.app-token-private-key }} # zizmor: ignore[secrets-outside-env]
           owner: ${{ github.repository_owner }}
-          repositories: ${{ github.repository }}
+          repositories: ${{ github.event.repository.name }}
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
