@@ -49,7 +49,6 @@ jobs:
         with:
           client-id: ${{ secrets.app-token-app-id }} # zizmor: ignore[secrets-outside-env]
           private-key: ${{ secrets.app-token-private-key }} # zizmor: ignore[secrets-outside-env]
-          owner: ${{ github.repository_owner }}
           repositories: ${{ github.repository }}
           permission-contents: write
           permission-pull-requests: write
