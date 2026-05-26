@@ -9,7 +9,7 @@ defaults:
 
 env:
   # renovate: datasource=pypi depName=zizmor
-  ZIZMOR_VERSION: 1.24.1
+  ZIZMOR_VERSION: 1.25.2
 
 on:
   workflow_call:
@@ -69,7 +69,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit # change to 'egress-policy: block' after couple of runs
 
@@ -78,18 +78,35 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Create standard zizmor rules file
+        env:
+          ZIZMOR_CONFIG_YAML: |-
+            ---
+            rules:
+              undocumented-permissions:
+                disable: true
+              concurrency-limits:
+                disable: true
+              superfluous-actions:
+                disable: true
+        run: |
+          echo "${ZIZMOR_CONFIG_YAML}" > ./.zizmor-standard-lint-defaults.yaml
+
       # MegaLinter
       - name: MegaLinter
         id: ml
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/latest/flavors/
-        uses: oxsecurity/megalinter@8fbdead70d1409964ab3d5afa885e18ee85388bb # v9.4.0
+        uses: oxsecurity/megalinter@0e3ce9b9c8c10effb9b269509cc47ca17cae31c7 # v9.5.0
         env:
           VALIDATE_ALL_CODEBASE: "true"
           # only try to post PR comments if it's not a fork
           GITHUB_COMMENT_REPORTER: ${{ !github.event.pull_request.head.repo.fork }}
           GITHUB_TOKEN: ${{ secrets.github-token }} # zizmor: ignore[secrets-outside-env]
           SARIF_REPORTER: "true"
+          ACTION_ZIZMOR_CONFIG_FILE: ./.zizmor-standard-lint-defaults.yaml
+          ACTION_ZIZMOR_UNSECURED_ENV_VARIABLES: GITHUB_TOKEN
+          REPOSITORY_OSV_SCANNER_ARGUMENTS: --allow-no-lockfiles
 
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
@@ -103,7 +120,7 @@ jobs:
 
       - name: Upload MegaLinter scan results to GitHub Security tab
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         with:
           sarif_file: "megalinter-reports/megalinter-report.sarif"
 
@@ -196,7 +213,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
+        uses: github/codeql-action/init@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -209,7 +226,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
+        uses: github/codeql-action/autobuild@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -222,58 +239,6 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
+        uses: github/codeql-action/analyze@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
         with:
           category: "/language:${{matrix.language}}"
-
-  zizmor:
-    name: zizmor scan
-    runs-on: ubuntu-24.04
-    if: ${{ github.event_name == 'pull_request' }}
-    permissions:
-      security-events: write
-      contents: read
-      actions: read
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-        with:
-          enable-cache: false
-
-      - name: Create standard zizmor rules file
-        env:
-          ZIZMOR_CONFIG_YAML: |
-            rules:
-              undocumented-permissions:
-                disable: true
-              concurrency-limits:
-                disable: true
-              superfluous-actions:
-                disable: true
-        run: |
-          echo "${ZIZMOR_CONFIG_YAML}" > /tmp/zizmor-standard-lint-defaults.yaml
-
-      - name: Run zizmor (sarif)
-        run: |
-          uvx "zizmor@${ZIZMOR_VERSION}" --pedantic --format sarif . > results.sarif
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZIZMOR_CONFIG: /tmp/zizmor-standard-lint-defaults.yaml
-
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
-        with:
-          sarif_file: results.sarif
-          category: zizmor
-
-      - name: Run zizmor (fail on findings)
-        run: |
-          uvx "zizmor@${ZIZMOR_VERSION}" --verbose --pedantic --format plain .
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZIZMOR_CONFIG: /tmp/zizmor-standard-lint-defaults.yaml
