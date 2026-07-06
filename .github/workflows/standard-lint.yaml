@@ -97,7 +97,7 @@ jobs:
         id: ml
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/latest/flavors/
-        uses: oxsecurity/megalinter@0e3ce9b9c8c10effb9b269509cc47ca17cae31c7 # v9.5.0
+        uses: oxsecurity/megalinter@ef3e84b8b836d76db562d0f3ed7da61e8fd538bc # v9.6.0
         env:
           VALIDATE_ALL_CODEBASE: "true"
           # only try to post PR comments if it's not a fork
@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload MegaLinter scan results to GitHub Security tab
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        uses: github/codeql-action/upload-sarif@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
         with:
           sarif_file: "megalinter-reports/megalinter-report.sarif"
 
@@ -199,7 +199,7 @@ jobs:
 
       - name: Set up Java
         if: ${{ matrix.language == 'java' }}
-        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5.3.0
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
           java-version: ${{ inputs.java-version }}
           distribution: "temurin"
@@ -207,13 +207,13 @@ jobs:
 
       - name: Set up .NET
         if: ${{ matrix.language == 'csharp' }}
-        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
         with:
           dotnet-version: ${{ inputs.dotnet-version }}
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        uses: github/codeql-action/init@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
         with:
           languages: ${{ matrix.language }}
           # If you wish to specify custom queries, you can do so here or in a config file.
@@ -226,7 +226,7 @@ jobs:
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
-        uses: github/codeql-action/autobuild@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        uses: github/codeql-action/autobuild@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -239,6 +239,6 @@ jobs:
       #   ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
         with:
           category: "/language:${{matrix.language}}"
